@@ -174,9 +174,9 @@ class CourtBuilder{
       const lp=new THREE.Mesh(pg,pm);lp.position.set(-hw,GH/2,0);g.add(lp);
       const rp=new THREE.Mesh(pg,pm);rp.position.set(hw,GH/2,0);g.add(rp);
       const cb=new THREE.Mesh(new THREE.CylinderGeometry(.06,.06,GW,8),pm);cb.rotation.z=Math.PI/2;cb.position.set(0,GH,0);g.add(cb);
-      const nb=new THREE.Mesh(new THREE.PlaneGeometry(GW,GH,8,6),nm);nb.position.set(0,GH/2,-zs*GD);g.add(nb);
-      for(const xs of[-1,1]){const ns=new THREE.Mesh(new THREE.PlaneGeometry(GD,GH,4,6),nm);ns.rotation.y=Math.PI/2;ns.position.set(xs*hw,GH/2,-zs*GD/2);g.add(ns);}
-      const nt=new THREE.Mesh(new THREE.PlaneGeometry(GW,GD,8,4),nm);nt.rotation.x=Math.PI/2;nt.position.set(0,GH,-zs*GD/2);g.add(nt);
+      const nb=new THREE.Mesh(new THREE.PlaneGeometry(GW,GH,8,6),nm);nb.position.set(0,GH/2,zs*GD);g.add(nb);
+      for(const xs of[-1,1]){const ns=new THREE.Mesh(new THREE.PlaneGeometry(GD,GH,4,6),nm);ns.rotation.y=Math.PI/2;ns.position.set(xs*hw,GH/2,zs*GD/2);g.add(ns);}
+      const nt=new THREE.Mesh(new THREE.PlaneGeometry(GW,GD,8,4),nm);nt.rotation.x=Math.PI/2;nt.position.set(0,GH,zs*GD/2);g.add(nt);
       g.position.z=zs*hl;g.traverse(c=>{if(c.isMesh)c.castShadow=true;});this.s.add(g);
     }
   }
@@ -235,10 +235,10 @@ class Player{
   constructor(scene,body,legend,team,isHuman=false){
     this.body=body;this.legend=legend;this.team=team;this.isHuman=isHuman;
     const g=new THREE.Group();
-    g.add(Object.assign(new THREE.Mesh(new THREE.CylinderGeometry(.4,.45,1.4,8),new THREE.MeshStandardMaterial({color:team===TH?0xffcc00:0xff4444,roughness:.6})),{position:new THREE.Vector3(0,.7,0),castShadow:true}));
-    g.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshStandardMaterial({color:0xddaa77,roughness:.7})),{position:new THREE.Vector3(0,1.7,0),castShadow:true}));
+    const torso=new THREE.Mesh(new THREE.CylinderGeometry(.4,.45,1.4,8),new THREE.MeshStandardMaterial({color:team===TH?0xffcc00:0xff4444,roughness:.6}));torso.position.set(0,.7,0);torso.castShadow=true;g.add(torso);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshStandardMaterial({color:0xddaa77,roughness:.7}));head.position.set(0,1.7,0);head.castShadow=true;g.add(head);
     const cv=document.createElement('canvas');cv.width=64;cv.height=64;const ctx=cv.getContext('2d');ctx.fillStyle=team===TH?'#000':'#fff';ctx.font='bold 40px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(legend?legend.id.charAt(0).toUpperCase():'?',32,32);
-    g.add(Object.assign(new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true})),{position:new THREE.Vector3(0,1.1,-.46)}));
+    const label=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));label.position.set(0,1.1,-.46);g.add(label);
     this.glowRing=new THREE.Mesh(new THREE.RingGeometry(.6,.8,24),new THREE.MeshBasicMaterial({color:legend?legend.color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide}));this.glowRing.rotation.x=-Math.PI/2;this.glowRing.position.y=.05;g.add(this.glowRing);
     if(isHuman){this.arrow=new THREE.Mesh(new THREE.ConeGeometry(.3,.5,4),new THREE.MeshBasicMaterial({color:0x00ff00}));this.arrow.position.y=2.3;g.add(this.arrow);}
     this.mesh=g;scene.add(this.mesh);this.hasBall=false;this.facingDir=new THREE.Vector3(0,0,team===TH?1:-1);this.moveDir=new THREE.Vector3();this.isSpecialActive=false;this.specialTimer=0;this.originalMass=body.mass;
