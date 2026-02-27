@@ -402,9 +402,7 @@ function rstPos(){const hz=[-10,-5,-5],hx=[0,-8,8],az=[10,5,5],ax=[0,-8,8];let h
 
 function proc(dt){
   if(!human||state!=='playing')return;const raw=input.dir(),mv=input.moving();
-  const cf=new THREE.Vector3();camera.getWorldDirection(cf);cf.y=0;cf.normalize();
-  const cr=new THREE.Vector3().crossVectors(cf,new THREE.Vector3(0,1,0)).normalize();
-  const md=new THREE.Vector3().addScaledVector(cr,raw.x).addScaledVector(cf,raw.z);if(md.lengthSq()>0)md.normalize();
+  const md=new THREE.Vector3(-raw.z,0,-raw.x);if(md.lengthSq()>0)md.normalize();
   human.move(md,mv);
   if(mv&&md.lengthSq()>.1){dT+=dt;if(dT>.1){dT=0;dust.emit(human.body.position.x,0,human.body.position.z,3);}}
   if(input.shoot()&&human.hasBall){const sd=human.getGoalDir(),sh=human.shoot(sd,SP);let pm=1;for(const f of specials.fx)if(f.type==='shotBoost'&&f.player===human){pm=f.multiplier;break;}physics.ballBody.velocity.set(sh.direction.x*sh.power*pm,3+Math.random()*2,sh.direction.z*sh.power*pm);ginga=Math.min(MG,ginga+5);dust.emit(physics.ballBody.position.x,0,physics.ballBody.position.z,8);}
