@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pelada Legends - Street Soccer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Permanent+Marker&family=Russo+One&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      overflow: hidden;
+      background: #000;
+      font-family: 'Russo One', sans-serif;
+      color: #fff;
+      cursor: default;
+    }
+
+    #game-canvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 0;
+    }
+
+    /* ── Character Select Screen ── */
+    #select-screen {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 100;
+      background: linear-gradient(135deg, #1a0a00 0%, #2d1400 50%, #1a0a00 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: opacity 0.8s ease;
+    }
+
+    #select-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #select-screen h1 {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 4rem;
+      color: #ffcc00;
+      text-shadow: 3px 3px 0 #ff6600, 6px 6px 0 rgba(0,0,0,0.5);
+      margin-bottom: 0.5rem;
+      letter-spacing: 4px;
+    }
+
+    #select-screen .subtitle {
+      font-size: 1rem;
+      color: #ff9944;
+      margin-bottom: 2rem;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+    }
+
+    .mural-wall {
+      display: flex;
+      gap: 16px;
+      padding: 20px 30px;
+      overflow-x: auto;
+      max-width: 95vw;
+      scrollbar-width: none;
+    }
+
+    .mural-wall::-webkit-scrollbar { display: none; }
+
+    .legend-card {
+      flex: 0 0 160px;
+      height: 240px;
+      border: 3px solid #553300;
+      border-radius: 8px;
+      background: linear-gradient(180deg, #3d1f00 0%, #221100 100%);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .legend-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 8px,
+        rgba(139,69,19,0.15) 8px,
+        rgba(139,69,19,0.15) 9px
+      );
+      pointer-events: none;
+    }
+
+    .legend-card:hover, .legend-card.active {
+      border-color: #ffcc00;
+      box-shadow: 0 0 20px rgba(255,204,0,0.5), inset 0 0 20px rgba(255,204,0,0.1);
+      transform: translateY(-8px) scale(1.05);
+    }
+
+    .legend-card .icon {
+      font-size: 3.5rem;
+      margin-bottom: 8px;
+    }
+
+    .legend-card .name {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 1rem;
+      color: #ffcc00;
+      text-align: center;
+    }
+
+    .legend-card .title {
+      font-size: 0.65rem;
+      color: #ff9944;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    .legend-card .stats {
+      display: flex;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .stat-bar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 0.55rem;
+      color: #aa8855;
+    }
+
+    .stat-bar .bar {
+      width: 6px;
+      height: 30px;
+      background: #221100;
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+      margin-top: 2px;
+    }
+
+    .stat-bar .bar .fill {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(0deg, #ff6600, #ffcc00);
+      border-radius: 3px;
+      transition: height 0.3s ease;
+    }
+
+    #start-btn {
+      margin-top: 2rem;
+      padding: 14px 50px;
+      font-family: 'Permanent Marker', cursive;
+      font-size: 1.5rem;
+      color: #000;
+      background: linear-gradient(180deg, #ffcc00, #ff8800);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      box-shadow: 0 4px 15px rgba(255,136,0,0.5);
+      transition: all 0.2s ease;
+    }
+
+    #start-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 6px 25px rgba(255,136,0,0.7);
+    }
+
+    /* ── HUD Overlay ── */
+    #hud {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+    }
+
+    #hud.visible { display: block; }
+
+    .scoreboard {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(0,0,0,0.75);
+      border: 2px solid #ffcc00;
+      border-radius: 8px;
+      padding: 8px 24px;
+    }
+
+    .team-score {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .team-score .team-label {
+      font-size: 0.8rem;
+      color: #ff9944;
+      text-transform: uppercase;
+    }
+
+    .team-score .score {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 2rem;
+      color: #ffcc00;
+    }
+
+    .score-divider {
+      font-size: 1.5rem;
+      color: #666;
+    }
+
+    .match-timer {
+      font-size: 0.9rem;
+      color: #ffcc00;
+      position: absolute;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      padding: 4px 14px;
+      border-radius: 4px;
+    }
+
+    /* Ginga Meter */
+    .ginga-container {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .ginga-label {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 0.9rem;
+      color: #ffcc00;
+      letter-spacing: 3px;
+    }
+
+    .ginga-bar-outer {
+      width: 280px;
+      height: 16px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #ffcc00;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .ginga-bar-inner {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff6600, #ffcc00, #ff6600);
+      border-radius: 6px;
+      transition: width 0.15s ease;
+      box-shadow: 0 0 10px rgba(255,204,0,0.5);
+    }
+
+    .ginga-bar-inner.full {
+      animation: ginga-pulse 0.5s ease infinite alternate;
+    }
+
+    @keyframes ginga-pulse {
+      from { box-shadow: 0 0 10px rgba(255,204,0,0.5); }
+      to { box-shadow: 0 0 25px rgba(255,204,0,1); }
+    }
+
+    .special-hint {
+      font-size: 0.7rem;
+      color: #aa8855;
+      letter-spacing: 2px;
+    }
+
+    /* Player icon in HUD */
+    .player-hud-icon {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(0,0,0,0.7);
+      border: 2px solid #ffcc00;
+      border-radius: 8px;
+      padding: 8px 14px;
+    }
+
+    .player-hud-icon .icon { font-size: 2rem; }
+    .player-hud-icon .name {
+      font-family: 'Permanent Marker', cursive;
+      font-size: 0.9rem;
+      color: #ffcc00;
+    }
+
+    /* Controls hint */
+    .controls-hint {
+      position: absolute;
+      bottom: 20px;
+      right: 20px;
+      font-size: 0.6rem;
+      color: #666;
+      text-align: right;
+      line-height: 1.6;
+    }
+
+    /* Goal scored animation */
+    .goal-splash {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0);
+      font-family: 'Permanent Marker', cursive;
+      font-size: 6rem;
+      color: #ffcc00;
+      text-shadow: 4px 4px 0 #ff6600, 8px 8px 0 rgba(0,0,0,0.5);
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .goal-splash.show {
+      transform: translate(-50%, -50%) scale(1);
+      opacity: 1;
+    }
+
+    .goal-splash.hide {
+      transform: translate(-50%, -50%) scale(1.5);
+      opacity: 0;
+      transition: all 0.5s ease;
+    }
+
+    /* Kickoff / End */
+    .game-message {
+      position: fixed;
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Permanent Marker', cursive;
+      font-size: 2.5rem;
+      color: #ffcc00;
+      text-shadow: 2px 2px 0 #ff6600;
+      z-index: 50;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .game-message.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+  <!-- Character Select Screen -->
+  <div id="select-screen">
+    <h1>PELADA LEGENDS</h1>
+    <div class="subtitle">Street Soccer</div>
+    <div class="mural-wall" id="mural-wall"></div>
+    <button id="start-btn">KICK OFF</button>
+  </div>
+
+  <!-- HUD Overlay -->
+  <div id="hud">
+    <div class="scoreboard">
+      <div class="team-score">
+        <span class="team-label">YOU</span>
+        <span class="score" id="score-home">0</span>
+      </div>
+      <span class="score-divider">:</span>
+      <div class="team-score">
+        <span class="score" id="score-away">0</span>
+        <span class="team-label">RIVAL</span>
+      </div>
+    </div>
+    <div class="match-timer" id="match-timer">5:00</div>
+
+    <div class="ginga-container">
+      <span class="ginga-label">GINGA</span>
+      <div class="ginga-bar-outer">
+        <div class="ginga-bar-inner" id="ginga-bar"></div>
+      </div>
+      <span class="special-hint">[SHIFT] SPECIAL MOVE</span>
+    </div>
+
+    <div class="player-hud-icon" id="player-hud-icon">
+      <span class="icon" id="hud-player-icon"></span>
+      <span class="name" id="hud-player-name"></span>
+    </div>
+
+    <div class="controls-hint">
+      WASD - Move<br>
+      SPACE - Shoot<br>
+      SHIFT - Special Move<br>
+      E - Pass
+    </div>
+  </div>
+
+  <div class="goal-splash" id="goal-splash">GOOOL!</div>
+  <div class="game-message" id="game-message"></div>
+
+  <canvas id="game-canvas"></canvas>
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
