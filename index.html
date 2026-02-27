@@ -100,6 +100,7 @@ import * as CANNON from 'cannon-es';
 const CW=40,CL=60,WH=4,WT=1,GW=8,GH=3,GD=3,BR=0.4,BM=0.45,WR=0.85,GV=-15;
 const PS=12,SM=1.4,BPD=1.8,SP=28,PP=16,MD=300,MG=100,GCR=8,GCD=15,GCO=100;
 const TH=0,TA=1;
+const _sh=(o,c,r)=>{if(c)Object.defineProperty(o,'castShadow',{value:true,writable:true,configurable:true,enumerable:true});if(r)Object.defineProperty(o,'receiveShadow',{value:true,writable:true,configurable:true,enumerable:true});};
 const LEGENDS=[
   {id:'pele',name:'Pelé',title:'The King',icon:'\u{1F451}',speed:80,power:85,control:95,color:0xffcc00},
   {id:'ronaldinho',name:'Ronaldinho',title:'The Magician',icon:'\u{1FA84}',speed:85,power:75,control:98,color:0x00cc66},
@@ -148,8 +149,8 @@ class CourtBuilder{
   constructor(s){this.s=s;}
   build(){this._court();this._walls();this._goals();this._bldgs();this._specs();this._lamps();this._marks();}
   _court(){
-    const c=new THREE.Mesh(new THREE.PlaneGeometry(CW+2,CL+2),new THREE.MeshStandardMaterial({color:0x999988,roughness:.95}));c.rotation.x=-Math.PI/2;c.receiveShadow=true;this.s.add(c);
-    const g=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x665544,roughness:1}));g.rotation.x=-Math.PI/2;g.position.y=-.02;g.receiveShadow=true;this.s.add(g);
+    const c=new THREE.Mesh(new THREE.PlaneGeometry(CW+2,CL+2),new THREE.MeshStandardMaterial({color:0x999988,roughness:.95}));c.rotation.x=-Math.PI/2;_sh(c,0,1);this.s.add(c);
+    const g=new THREE.Mesh(new THREE.PlaneGeometry(200,200),new THREE.MeshStandardMaterial({color:0x665544,roughness:1}));g.rotation.x=-Math.PI/2;g.position.y=-.02;_sh(g,0,1);this.s.add(g);
   }
   _marks(){
     const m=new THREE.MeshBasicMaterial({color:0xccccbb,transparent:true,opacity:.3});
@@ -166,7 +167,7 @@ class CourtBuilder{
     const cols=[0xffcc00,0x00cc66,0xff4444,0x4488ff];
     [[-hw-WT-.01,hh,-8],[- hw-WT-.01,hh,8],[hw+WT+.01,hh,-5],[hw+WT+.01,hh,10]].forEach((p,i)=>{const g=new THREE.Mesh(new THREE.PlaneGeometry(10,WH-.5),new THREE.MeshStandardMaterial({color:cols[i],roughness:.8,emissive:cols[i],emissiveIntensity:.15}));g.position.set(...p);g.rotation.y=p[0]<0?-Math.PI/2:Math.PI/2;this.s.add(g);});
   }
-  _wm(x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);o.castShadow=true;o.receiveShadow=true;this.s.add(o);}
+  _wm(x,y,z,w,h,d,m){const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);_sh(o,1,1);this.s.add(o);}
   _goals(){
     const hw=GW/2,hl=CL/2,pm=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.3,metalness:.8}),nm=new THREE.MeshStandardMaterial({color:0xffffff,transparent:true,opacity:.3,wireframe:true,side:THREE.DoubleSide});
     for(const zs of[-1,1]){
@@ -177,7 +178,7 @@ class CourtBuilder{
       const nb=new THREE.Mesh(new THREE.PlaneGeometry(GW,GH,8,6),nm);nb.position.set(0,GH/2,zs*GD);g.add(nb);
       for(const xs of[-1,1]){const ns=new THREE.Mesh(new THREE.PlaneGeometry(GD,GH,4,6),nm);ns.rotation.y=Math.PI/2;ns.position.set(xs*hw,GH/2,zs*GD/2);g.add(ns);}
       const nt=new THREE.Mesh(new THREE.PlaneGeometry(GW,GD,8,4),nm);nt.rotation.x=Math.PI/2;nt.position.set(0,GH,zs*GD/2);g.add(nt);
-      g.position.z=zs*hl;g.traverse(c=>{if(c.isMesh)c.castShadow=true;});this.s.add(g);
+      g.position.z=zs*hl;g.traverse(c=>{if(c.isMesh)_sh(c,1,0);});this.s.add(g);
     }
   }
   _bldgs(){
@@ -187,7 +188,7 @@ class CourtBuilder{
       const side=Math.floor(Math.random()*4);let x,z;const off=6+Math.random()*25;
       if(side===0){x=-hw-off;z=(Math.random()-.5)*CL*1.5;}else if(side===1){x=hw+off;z=(Math.random()-.5)*CL*1.5;}else if(side===2){x=(Math.random()-.5)*CW*2;z=-hl-off;}else{x=(Math.random()-.5)*CW*2;z=hl+off;}
       const w=4+Math.random()*6,h=6+Math.random()*14,d=4+Math.random()*6;
-      const m=new THREE.Mesh(bg,mats[Math.floor(Math.random()*cols.length)]);m.scale.set(w,h,d);m.position.set(x,h/2,z);m.castShadow=true;m.receiveShadow=true;this.s.add(m);
+      const m=new THREE.Mesh(bg,mats[Math.floor(Math.random()*cols.length)]);m.scale.set(w,h,d);m.position.set(x,h/2,z);_sh(m,1,1);this.s.add(m);
       const wm=new THREE.MeshStandardMaterial({color:0xffddaa,emissive:0xffcc77,emissiveIntensity:Math.random()>.4?.6:0,roughness:.3});
       const fl=Math.floor(h/3.5),co=Math.max(1,Math.floor(w/2.5));
       for(let f=0;f<fl;f++)for(let c=0;c<co;c++){if(Math.random()>.7)continue;const wi=new THREE.Mesh(new THREE.PlaneGeometry(.8,1),wm.clone());const xo=(c-(co-1)/2)*2.2,yp=f*3.5+2;
@@ -207,7 +208,7 @@ class CourtBuilder{
   _lamps(){
     const hw=CW/2,hl=CL/2,pm=new THREE.MeshStandardMaterial({color:0x444444,metalness:.7,roughness:.3});
     for(const[x,,z]of[[-hw-3,0,-hl/2],[-hw-3,0,hl/2],[hw+3,0,-hl/2],[hw+3,0,hl/2]]){
-      const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,6,6),pm);p.position.set(x,3,z);p.castShadow=true;this.s.add(p);
+      const p=new THREE.Mesh(new THREE.CylinderGeometry(.08,.12,6,6),pm);p.position.set(x,3,z);_sh(p,1,0);this.s.add(p);
       const h=new THREE.Mesh(new THREE.BoxGeometry(.6,.2,.6),new THREE.MeshStandardMaterial({color:0xffddaa,emissive:0xffcc88,emissiveIntensity:.8}));h.position.set(x,6.1,z);this.s.add(h);
       const l=new THREE.PointLight(0xffcc77,.8,30,1.5);l.position.set(x,6,z);this.s.add(l);
     }
@@ -217,7 +218,7 @@ class CourtBuilder{
 /* ── BALL ── */
 class Ball{
   constructor(scene,body){
-    this.body=body;this.mesh=new THREE.Mesh(new THREE.SphereGeometry(BR,16,16),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4,metalness:.1}));this.mesh.castShadow=true;scene.add(this.mesh);
+    this.body=body;this.mesh=new THREE.Mesh(new THREE.SphereGeometry(BR,16,16),new THREE.MeshStandardMaterial({color:0xffffff,roughness:.4,metalness:.1}));_sh(this.mesh,1,0);scene.add(this.mesh);
     this.showTrail=false;this.trailColor=0xffcc00;this.trail=[];this.trailMeshes=[];
     const tg=new THREE.SphereGeometry(BR*.5,6,6);for(let i=0;i<8;i++){const m=new THREE.Mesh(tg,new THREE.MeshBasicMaterial({color:0xffcc00,transparent:true,opacity:.3}));m.visible=false;scene.add(m);this.trailMeshes.push(m);}
   }
@@ -235,8 +236,8 @@ class Player{
   constructor(scene,body,legend,team,isHuman=false){
     this.body=body;this.legend=legend;this.team=team;this.isHuman=isHuman;
     const g=new THREE.Group();
-    const torso=new THREE.Mesh(new THREE.CylinderGeometry(.4,.45,1.4,8),new THREE.MeshStandardMaterial({color:team===TH?0xffcc00:0xff4444,roughness:.6}));torso.position.set(0,.7,0);torso.castShadow=true;g.add(torso);
-    const head=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshStandardMaterial({color:0xddaa77,roughness:.7}));head.position.set(0,1.7,0);head.castShadow=true;g.add(head);
+    const torso=new THREE.Mesh(new THREE.CylinderGeometry(.4,.45,1.4,8),new THREE.MeshStandardMaterial({color:team===TH?0xffcc00:0xff4444,roughness:.6}));torso.position.set(0,.7,0);_sh(torso,1,0);g.add(torso);
+    const head=new THREE.Mesh(new THREE.SphereGeometry(.28,8,8),new THREE.MeshStandardMaterial({color:0xddaa77,roughness:.7}));head.position.set(0,1.7,0);_sh(head,1,0);g.add(head);
     const cv=document.createElement('canvas');cv.width=64;cv.height=64;const ctx=cv.getContext('2d');ctx.fillStyle=team===TH?'#000':'#fff';ctx.font='bold 40px Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(legend?legend.id.charAt(0).toUpperCase():'?',32,32);
     const label=new THREE.Mesh(new THREE.PlaneGeometry(.5,.5),new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(cv),transparent:true}));label.position.set(0,1.1,-.46);g.add(label);
     this.glowRing=new THREE.Mesh(new THREE.RingGeometry(.6,.8,24),new THREE.MeshBasicMaterial({color:legend?legend.color:0xffffff,transparent:true,opacity:0,side:THREE.DoubleSide}));this.glowRing.rotation.x=-Math.PI/2;this.glowRing.position.y=.05;g.add(this.glowRing);
@@ -375,7 +376,7 @@ function init(){
   scene=new THREE.Scene();scene.background=new THREE.Color(0x1a0a00);scene.fog=new THREE.FogExp2(0x332211,.008);
   camera=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,.1,300);
   scene.add(new THREE.AmbientLight(0xffddaa,.3));scene.add(new THREE.HemisphereLight(0xffaa44,0x443322,.5));
-  const sun=new THREE.DirectionalLight(0xff8833,2);sun.position.set(-40,15,-20);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;sun.shadow.camera.near=1;sun.shadow.camera.far=120;sun.shadow.bias=-.001;scene.add(sun);
+  const sun=new THREE.DirectionalLight(0xff8833,2);sun.position.set(-40,15,-20);_sh(sun,1,0);sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-50;sun.shadow.camera.right=50;sun.shadow.camera.top=50;sun.shadow.camera.bottom=-50;sun.shadow.camera.near=1;sun.shadow.camera.far=120;sun.shadow.bias=-.001;scene.add(sun);
   const fill=new THREE.DirectionalLight(0xffcc88,.4);fill.position.set(20,10,30);scene.add(fill);
   composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));composer.addPass(new UnrealBloomPass(new THREE.Vector2(window.innerWidth,window.innerHeight),.4,.6,.85));composer.addPass(new OutputPass());
   physics=new PhysicsWorld();new CourtBuilder(scene).build();
