@@ -139,7 +139,7 @@ class PhysicsWorld{
   }
   _w(x,y,z,hx,hy,hz){this.world.addBody(new CANNON.Body({mass:0,shape:new CANNON.Box(new CANNON.Vec3(hx,hy,hz)),position:new CANNON.Vec3(x,y,z),material:this.wm}));}
   _ball(){this.ballBody=new CANNON.Body({mass:BM,shape:new CANNON.Sphere(BR),position:new CANNON.Vec3(0,BR+.1,0),material:this.bm,linearDamping:.25,angularDamping:.4});this.world.addBody(this.ballBody);}
-  createPlayerBody(p){const b=new CANNON.Body({mass:70,shape:new CANNON.Cylinder(.5,.5,1.8,8),position:new CANNON.Vec3(p.x,.9,p.z),material:this.pm,linearDamping:.9,angularDamping:.99,fixedRotation:true});this.world.addBody(b);this.playerBodies.push(b);return b;}
+  createPlayerBody(p){const b=new CANNON.Body({mass:70,shape:new CANNON.Cylinder(.5,.5,1.8,8),position:new CANNON.Vec3(p.x,.9,p.z),material:this.pm,linearDamping:.5,angularDamping:.95,fixedRotation:true});this.world.addBody(b);this.playerBodies.push(b);return b;}
   resetBall(){this.ballBody.position.set(0,BR+.1,0);this.ballBody.velocity.set(0,0,0);this.ballBody.angularVelocity.set(0,0,0);}
   update(dt){this.world.step(1/60,dt,3);}
 }
@@ -338,7 +338,7 @@ class Cam{
 
 /* ── INPUT ── */
 class Input{
-  constructor(){this.k={};this.jp={};window.addEventListener('keydown',e=>{if(!this.k[e.code])this.jp[e.code]=true;this.k[e.code]=true;});window.addEventListener('keyup',e=>{this.k[e.code]=false;});}
+  constructor(){this.k={};this.jp={};const gk=new Set(['KeyW','KeyA','KeyS','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','KeyE','ShiftLeft','ShiftRight']);window.addEventListener('keydown',e=>{if(gk.has(e.code))e.preventDefault();if(!this.k[e.code])this.jp[e.code]=true;this.k[e.code]=true;});window.addEventListener('keyup',e=>{if(gk.has(e.code))e.preventDefault();this.k[e.code]=false;});}
   dir(){const d=new THREE.Vector3();if(this.k['KeyW']||this.k['ArrowUp'])d.z+=1;if(this.k['KeyS']||this.k['ArrowDown'])d.z-=1;if(this.k['KeyA']||this.k['ArrowLeft'])d.x-=1;if(this.k['KeyD']||this.k['ArrowRight'])d.x+=1;if(d.lengthSq()>0)d.normalize();return d;}
   moving(){return this.k['KeyW']||this.k['ArrowUp']||this.k['KeyS']||this.k['ArrowDown']||this.k['KeyA']||this.k['ArrowLeft']||this.k['KeyD']||this.k['ArrowRight'];}
   shoot(){return this.jp['Space'];}pass(){return this.jp['KeyE'];}special(){return this.jp['ShiftLeft']||this.jp['ShiftRight'];}clear(){this.jp={};}
@@ -401,7 +401,11 @@ function onGoal(t){gCD=3;state='goal';if(t===TH)sH++;else sA++;ui.score(sH,sA);u
 function rstPos(){const hz=[-10,-5,-5],hx=[0,-8,8],az=[10,5,5],ax=[0,-8,8];let hi=0,ai2=0;for(const p of players){if(p.team===TH){p.body.position.set(hx[hi],.9,hz[hi]);p.body.velocity.set(0,0,0);hi++;}else{p.body.position.set(ax[ai2],.9,az[ai2]);p.body.velocity.set(0,0,0);ai2++;}}}
 
 function proc(dt){
-  if(!human||state!=='playing')return;const md=input.dir(),mv=input.moving();human.move(md,mv);
+  if(!human||state!=='playing')return;const raw=input.dir(),mv=input.moving();
+  const cf=new THREE.Vector3();camera.getWorldDirection(cf);cf.y=0;cf.normalize();
+  const cr=new THREE.Vector3().crossVectors(cf,new THREE.Vector3(0,1,0)).normalize();
+  const md=new THREE.Vector3().addScaledVector(cr,raw.x).addScaledVector(cf,raw.z);if(md.lengthSq()>0)md.normalize();
+  human.move(md,mv);
   if(mv&&md.lengthSq()>.1){dT+=dt;if(dT>.1){dT=0;dust.emit(human.body.position.x,0,human.body.position.z,3);}}
   if(input.shoot()&&human.hasBall){const sd=human.getGoalDir(),sh=human.shoot(sd,SP);let pm=1;for(const f of specials.fx)if(f.type==='shotBoost'&&f.player===human){pm=f.multiplier;break;}physics.ballBody.velocity.set(sh.direction.x*sh.power*pm,3+Math.random()*2,sh.direction.z*sh.power*pm);ginga=Math.min(MG,ginga+5);dust.emit(physics.ballBody.position.x,0,physics.ballBody.position.z,8);}
   if(input.pass()&&human.hasBall){const tm=players.filter(p=>p.team===TH&&p!==human);if(tm.length>0){let best=tm[0],bs=-Infinity;for(const m of tm){const d=m.getPosition().clone().sub(human.getPosition()),dot=d.normalize().dot(human.facingDir),dist=human.getPosition().distanceTo(m.getPosition());const sc=dot*10-dist;if(sc>bs){bs=sc;best=m;}}const pd=human.pass(best.getPosition());physics.ballBody.velocity.set(pd.direction.x*pd.power,1,pd.direction.z*pd.power);ginga=Math.min(MG,ginga+10);}}
