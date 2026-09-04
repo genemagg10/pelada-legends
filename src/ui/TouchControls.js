@@ -62,6 +62,7 @@ export class TouchControls {
     this.stickId = null;
     this.input.setTouchMove(0, 0);
     if (this.knob) this.knob.style.transform = '';
+    this.stick?.classList.remove('engaged');
     for (const btn of [this.shootBtn, this.passBtn, this.specialBtn]) {
       btn?.classList.remove('active');
     }
@@ -104,6 +105,7 @@ export class TouchControls {
       this.originX = r.left + r.width / 2;
       this.originY = r.top + r.height / 2;
       this.radius = Math.min(r.width, r.height) * 0.42;
+      this.stick.classList.add('engaged');
       this._applyStick(e);
     };
 
@@ -117,6 +119,7 @@ export class TouchControls {
       if (e.pointerId !== this.stickId) return;
       this.stickId = null;
       this.input.setTouchMove(0, 0);
+      this.stick.classList.remove('engaged');
       if (this.knob) this.knob.style.transform = '';
     };
 

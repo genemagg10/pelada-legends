@@ -5,6 +5,11 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+button {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 html, body {
   width: 100%;
   height: 100%;
@@ -82,12 +87,14 @@ html, body {
 
 #select-screen h1 {
   font-family: 'Permanent Marker', cursive;
-  font-size: clamp(2.2rem, 7vw, 4rem);
+  font-size: clamp(1.45rem, 7.2vw, 4rem);
   color: #ffcc00;
   text-shadow: 3px 3px 0 #ff6600, 6px 6px 0 rgba(0, 0, 0, 0.5);
-  letter-spacing: 4px;
+  letter-spacing: 0.06em;
   text-align: center;
   line-height: 1.05;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
 #select-screen .subtitle {
@@ -236,25 +243,37 @@ html, body {
   border-radius: 3px;
 }
 
+.select-dock {
+  display: contents;
+}
+
 #start-btn {
   margin-top: 0.6rem;
   padding: 12px 46px;
   font-family: 'Permanent Marker', cursive;
   font-size: 1.4rem;
-  color: #000;
-  background: linear-gradient(180deg, #ffcc00, #ff8800);
-  border: none;
+  color: #1a0a00;
+  background: #ffcc00;
+  border: 2px solid #ffcc00;
   border-radius: 6px;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 3px;
-  box-shadow: 0 4px 15px rgba(255, 136, 0, 0.5);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 15px rgba(255, 204, 0, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.15s ease;
+  appearance: none;
+  -webkit-appearance: none;
 }
 
 #start-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 25px rgba(255, 136, 0, 0.7);
+  transform: scale(1.03);
+  box-shadow: 0 0 20px rgba(255, 204, 0, 0.35);
+}
+
+#start-btn:active {
+  transform: scale(0.96);
+  background: #ff6600;
+  border-color: #ff6600;
 }
 
 #hud {
@@ -635,30 +654,34 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
 
 .touch-stick {
   position: absolute;
-  left: calc(10px + env(safe-area-inset-left, 0px));
+  left: calc(12px + env(safe-area-inset-left, 0px));
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  width: 148px;
-  height: 148px;
+  width: 112px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
+  gap: 6px;
   pointer-events: auto;
   touch-action: none;
   z-index: 5;
 }
 
 .touch-stick-ring {
-  width: 112px;
-  height: 112px;
+  width: 104px;
+  height: 104px;
   border-radius: 50%;
-  border: 3px solid #ffcc00;
-  background:
-    radial-gradient(circle at 50% 42%, rgba(255, 204, 0, 0.12), transparent 55%),
-    linear-gradient(180deg, #3d1f00 0%, #221100 100%);
-  box-shadow: 0 0 16px rgba(255, 204, 0, 0.22), inset 0 0 18px rgba(0, 0, 0, 0.45);
+  border: 2px solid #ffcc00;
+  background: rgba(61, 31, 0, 0.85);
   position: relative;
+  opacity: 0.75;
+}
+
+.touch-stick-ring::before {
+  content: '';
+  position: absolute;
+  inset: 28px;
+  border-radius: 50%;
+  background: #221100;
 }
 
 .touch-stick-knob {
@@ -669,24 +692,29 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
   height: 46px;
   margin: -23px 0 0 -23px;
   border-radius: 50%;
-  background: linear-gradient(180deg, #ffcc00, #ff8800);
-  border: 2px solid #1a0a00;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  background: #221100;
+  border: 2px solid #ffcc00;
   pointer-events: none;
+  z-index: 1;
+}
+
+.touch-stick.engaged .touch-stick-ring {
+  opacity: 1;
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35);
 }
 
 .touch-caption {
-  font-size: 0.55rem;
-  letter-spacing: 2px;
-  color: #aa8855;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: #ff9944;
 }
 
 .touch-actions {
   position: absolute;
-  right: calc(10px + env(safe-area-inset-right, 0px));
+  right: calc(12px + env(safe-area-inset-right, 0px));
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
-  width: 168px;
-  height: 168px;
+  width: 148px;
+  height: 148px;
   pointer-events: none;
   z-index: 5;
 }
@@ -695,48 +723,64 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
   position: absolute;
   pointer-events: auto;
   touch-action: none;
+  appearance: none;
+  -webkit-appearance: none;
   border-radius: 50%;
-  border: 3px solid #ffcc00;
-  background: linear-gradient(180deg, #3d1f00 0%, #221100 100%);
-  color: #ffcc00;
+  border: 2px solid #ffcc00;
+  background: rgba(61, 31, 0, 0.85);
+  color: #ff9944;
   font-family: 'Russo One', sans-serif;
-  letter-spacing: 0.6px;
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  box-shadow: 0 0 14px rgba(255, 204, 0, 0.2), inset 0 0 12px rgba(0, 0, 0, 0.4);
   cursor: pointer;
   line-height: 1.1;
+  opacity: 0.75;
+  box-shadow: none;
+  outline: none;
+}
+
+.touch-btn:focus-visible {
+  box-shadow: 0 0 16px rgba(255, 204, 0, 0.35);
+  opacity: 1;
 }
 
 .touch-btn.active {
-  transform: scale(0.94);
-  background: linear-gradient(180deg, #ffcc00, #ff8800);
+  transform: scale(0.96);
+  background: #ff6600;
+  border-color: #ff6600;
   color: #1a0a00;
+  opacity: 1;
+  box-shadow: 0 0 14px rgba(255, 102, 0, 0.45);
 }
 
 .touch-shoot {
-  width: 86px;
-  height: 86px;
+  width: 72px;
+  height: 72px;
+  min-width: 48px;
+  min-height: 48px;
   right: 0;
   bottom: 0;
-  font-size: 0.78rem;
 }
 
 .touch-pass {
-  width: 62px;
-  height: 62px;
-  right: 96px;
-  bottom: 8px;
-  font-size: 0.62rem;
+  width: 52px;
+  height: 52px;
+  min-width: 48px;
+  min-height: 48px;
+  right: 86px;
+  bottom: 10px;
+  font-size: 10px;
 }
 
 .touch-special {
-  width: 70px;
-  height: 70px;
-  right: 18px;
-  bottom: 96px;
-  font-size: 0.58rem;
-  border-color: #ff6600;
-  color: #ff9944;
+  width: 56px;
+  height: 56px;
+  min-width: 48px;
+  min-height: 48px;
+  right: 12px;
+  bottom: 86px;
+  font-size: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -745,9 +789,9 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
 }
 
 .touch-special span {
-  font-size: 0.42rem;
-  letter-spacing: 0.4px;
-  max-width: 60px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  max-width: 50px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -755,14 +799,29 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
 }
 
 .touch-special.ready {
-  animation: ginga-pulse 0.5s ease infinite alternate;
-  box-shadow: 0 0 18px rgba(255, 102, 0, 0.55);
+  border-color: #ff6600;
+  color: #ff9944;
+  opacity: 1;
+  animation: special-charge 0.55s ease infinite alternate;
+}
+
+@keyframes special-charge {
+  from { box-shadow: 0 0 8px rgba(255, 102, 0, 0.28); }
+  to { box-shadow: 0 0 18px rgba(255, 102, 0, 0.55); }
 }
 
 body.touch-ui .controls-hint,
 body.touch-ui .help-toggle,
 body.touch-ui .special-hint {
   display: none;
+}
+
+@media (pointer: coarse) {
+  .controls-hint,
+  .help-toggle,
+  .special-hint {
+    display: none !important;
+  }
 }
 
 body.touch-ui .ginga-container {
@@ -774,8 +833,8 @@ body.touch-ui .ginga-container {
 }
 
 body.touch-ui .player-hud-icon {
-  top: calc(10px + env(safe-area-inset-top, 0px));
-  left: calc(8px + env(safe-area-inset-left, 0px));
+  top: calc(12px + env(safe-area-inset-top, 0px));
+  left: calc(12px + env(safe-area-inset-left, 0px));
   bottom: auto;
   padding: 5px 8px;
   max-width: 28vw;
@@ -798,18 +857,24 @@ body.touch-ui .ginga-label {
 @media (max-width: 820px) {
   #select-screen {
     justify-content: flex-start;
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 0;
   }
 
   #select-screen h1 {
-    font-size: clamp(1.7rem, 8vw, 2.6rem);
-    letter-spacing: 2px;
+    font-size: clamp(1.4rem, 7.2vw, 2.4rem);
+    letter-spacing: 0.05em;
     flex-shrink: 0;
+    padding: 0 12px;
+    white-space: nowrap;
   }
 
   #select-screen .subtitle {
     margin-bottom: 0.35rem;
-    letter-spacing: 4px;
+    letter-spacing: 0.28em;
     flex-shrink: 0;
+    padding: 0 12px;
   }
 
   .mural-wall {
@@ -826,7 +891,7 @@ body.touch-ui .ginga-label {
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x mandatory;
     gap: 10px;
-    padding: 6px 8px 10px;
+    padding: 6px 12px 12px;
   }
 
   .legend-card {
@@ -836,12 +901,24 @@ body.touch-ui .ginga-label {
     scroll-snap-align: start;
   }
 
-  #start-btn {
-    margin-top: auto;
-    margin-bottom: 0;
+  .select-dock {
+    display: block;
+    width: 100%;
     flex-shrink: 0;
-    padding: 12px 36px;
+    position: sticky;
+    bottom: 0;
+    background: #3d1f00;
+    border-top: 2px solid #ffcc00;
+  }
+
+  #start-btn {
+    width: 100%;
+    margin: 0;
+    border-radius: 0;
+    border: none;
+    padding: 14px 16px calc(14px + env(safe-area-inset-bottom, 0px));
     font-size: 1.2rem;
+    box-shadow: none;
   }
 
   .scoreboard {
@@ -870,44 +947,23 @@ body.touch-ui .ginga-label {
   }
 }
 
-@media (max-width: 520px) {
-  .touch-stick {
-    width: 132px;
-    height: 132px;
-  }
-
+@media (max-width: 360px) {
   .touch-stick-ring {
-    width: 100px;
-    height: 100px;
+    width: 96px;
+    height: 96px;
   }
 
-  .touch-actions {
-    width: 150px;
-    height: 150px;
-  }
-
-  .touch-shoot {
-    width: 76px;
-    height: 76px;
-  }
-
-  .touch-pass {
-    width: 56px;
-    height: 56px;
-    right: 86px;
-  }
-
-  .touch-special {
-    width: 62px;
-    height: 62px;
-    bottom: 86px;
+  .touch-stick-knob {
+    width: 42px;
+    height: 42px;
+    margin: -21px 0 0 -21px;
   }
 }
 
 @media (max-height: 500px) and (orientation: landscape) {
   #select-screen h1 {
-    font-size: 1.45rem;
-    letter-spacing: 2px;
+    font-size: clamp(1.2rem, 4.6vw, 1.6rem);
+    letter-spacing: 0.04em;
   }
 
   #select-screen .subtitle {
@@ -931,7 +987,7 @@ body.touch-ui .ginga-label {
   }
 
   #start-btn {
-    padding: 8px 28px;
+    padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
     font-size: 1.05rem;
   }
 
@@ -948,14 +1004,33 @@ body.touch-ui .ginga-label {
     display: none;
   }
 
-  .touch-stick {
-    width: 124px;
-    height: 124px;
+  .touch-stick-ring {
+    width: 96px;
+    height: 96px;
   }
 
   .touch-actions {
-    width: 146px;
-    height: 138px;
+    width: 138px;
+    height: 132px;
+  }
+
+  .touch-shoot {
+    width: 64px;
+    height: 64px;
+  }
+
+  .touch-pass,
+  .touch-special {
+    width: 48px;
+    height: 48px;
+  }
+
+  .touch-special {
+    bottom: 72px;
+  }
+
+  .touch-pass {
+    right: 76px;
   }
 }
 

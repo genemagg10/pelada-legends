@@ -134,7 +134,7 @@ export class UIManager {
     this.gingaBar.style.width = pct + '%';
     if (pct >= 100) this.gingaBar.classList.add('full');
     else this.gingaBar.classList.remove('full');
-    document.getElementById('touch-special')?.classList.toggle('ready', pct >= 100);
+    document.getElementById('touch-special')?.classList.toggle('ready', pct >= 80);
   }
 
   updatePossession(player) {
