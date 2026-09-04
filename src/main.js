@@ -14,6 +14,7 @@ import { SpecialMoveManager } from './systems/SpecialMoveManager.js';
 import { Ball } from './entities/Ball.js';
 import { Player } from './entities/Player.js';
 import { UIManager } from './ui/UIManager.js';
+import { TouchControls } from './ui/TouchControls.js';
 import { GhostTrailEffect } from './shaders/ghostTrail.js';
 import { DustParticleSystem } from './shaders/dustParticle.js';
 import { VfxManager } from './systems/VfxManager.js';
@@ -26,7 +27,7 @@ import {
 } from './constants.js';
 
 let renderer, scene, camera, composer;
-let physics, cameraController, inputManager, aiController;
+let physics, cameraController, inputManager, touchControls, aiController;
 let ghostTrail, dustSystem, sparkSystem, ballEntity, specialMoveManager, vfx;
 let engineReady = false;
 let lastCarrier = null;
@@ -107,6 +108,7 @@ function initEngine() {
 
   cameraController = new CameraController(camera);
   inputManager = new InputManager();
+  touchControls = new TouchControls(inputManager);
   aiController = new AIController();
   ghostTrail = new GhostTrailEffect(scene);
   dustSystem = new DustParticleSystem(scene, 200, 0xddbb88);
@@ -120,14 +122,24 @@ function initEngine() {
 
   engineReady = true;
 
-  window.addEventListener('resize', () => {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+  const applyViewport = () => {
+    const vv = window.visualViewport;
+    const w = Math.round(vv?.width ?? window.innerWidth);
+    const h = Math.round(vv?.height ?? window.innerHeight);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
-    renderer.setSize(w, h);
+    renderer.setSize(w, h, false);
     composer.setSize(w, h);
-  });
+    const canvas = renderer.domElement;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    canvas.style.top = `${vv?.offsetTop ?? 0}px`;
+    canvas.style.left = `${vv?.offsetLeft ?? 0}px`;
+  };
+  window.addEventListener('resize', applyViewport);
+  window.visualViewport?.addEventListener('resize', applyViewport);
+  window.visualViewport?.addEventListener('scroll', applyViewport);
+  applyViewport();
 }
 
 try {
@@ -277,7 +289,8 @@ function cameraRelativeMove(raw) {
   else forward.normalize();
   const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
   const move = new THREE.Vector3().addScaledVector(right, raw.x).addScaledVector(forward, raw.z);
-  if (move.lengthSq() > 0) move.normalize();
+  const mag = Math.min(1, raw.length());
+  if (move.lengthSq() > 0) move.normalize().multiplyScalar(mag);
   return move;
 }
 
@@ -400,6 +413,7 @@ function updateMatchTimer(dt) {
 
     setTimeout(() => {
       uiManager.showMenu();
+      touchControls?.reset();
       gameState = 'menu';
     }, 5000);
   }

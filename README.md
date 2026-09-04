@@ -40,12 +40,27 @@ Shoots squash-stretch the ball (Y/XZ one frame, spring back, scaled by shot powe
 
 ### Controls
 
+**Desktop (keyboard)**
+
 | Key | Action |
 | --- | --- |
 | WASD / arrows | Move (camera-relative) |
 | Space | Shoot |
 | E | Pass to a teammate |
 | Shift | Special move (needs a full Ginga bar) |
+
+**Phone / tablet (on-screen)**
+
+Virtual pads appear on coarse pointers, narrow touch screens, or after the first touch. They feed the same `InputManager` vectors as the keys above — not a second control path.
+
+| Pad | Action |
+| --- | --- |
+| Left stick | Move (stick up = W / camera-forward, right = D) |
+| SHOOT | Space |
+| PASS | E |
+| GINGA | Shift (pulses gold when the bar is full) |
+
+Multi-touch works (steer + shoot at once). The page does not scroll or pinch-zoom during a match. Keyboard hints stay desktop-only; mobile uses the labeled buttons. Landscape is the better match view; portrait still plays.
 
 ### Ginga
 
@@ -66,6 +81,5 @@ Match length is 5:00. Home attacks the gold-net end; rivals attack the red-net e
 ## Next
 
 - Audio suite
-- Mobile touch controls
 - Pause menu
 - Online multiplayer

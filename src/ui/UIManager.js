@@ -85,7 +85,11 @@ export class UIManager {
         this.hudPlayerName.textContent = this.selectedLegend.name;
         this.hudPlayerSpecial.textContent = this.selectedLegend.specialName;
         this.specialHint.textContent = `[SHIFT] ${this.selectedLegend.specialName.toUpperCase()}`;
-        this._armControlsHint();
+        const specialName = document.getElementById('touch-special-name');
+        if (specialName) specialName.textContent = this.selectedLegend.specialName;
+        if (!document.body.classList.contains('touch-ui')) {
+          this._armControlsHint();
+        }
         this.onStartGame(this.selectedLegend);
       }
     });
@@ -130,6 +134,7 @@ export class UIManager {
     this.gingaBar.style.width = pct + '%';
     if (pct >= 100) this.gingaBar.classList.add('full');
     else this.gingaBar.classList.remove('full');
+    document.getElementById('touch-special')?.classList.toggle('ready', pct >= 100);
   }
 
   updatePossession(player) {
