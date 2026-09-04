@@ -239,3 +239,4 @@ assert(prevented, 'gesture lock should still preventDefault on the canvas');
 
 console.log('touch → InputManager mapping: ok');
 console.log('TouchControls pointer/touch DOM: ok');
+console.log('P0 primary (live knob-moves / player-frozen): Player.move must wakeUp — see src/entities/Player.js');

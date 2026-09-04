@@ -247,10 +247,12 @@ function resetPlayerPositions() {
     if (p.team === TEAM_HOME) {
       p.body.position.set(homeX[hi], 0.9, homeZ[hi]);
       p.body.velocity.set(0, 0, 0);
+      if (typeof p.body.wakeUp === 'function') p.body.wakeUp();
       hi++;
     } else {
       p.body.position.set(awayX[ai], 0.9, awayZ[ai]);
       p.body.velocity.set(0, 0, 0);
+      if (typeof p.body.wakeUp === 'function') p.body.wakeUp();
       ai++;
     }
   }
@@ -486,7 +488,42 @@ function animate() {
   sparkSystem.update(dt);
   vfx.update(dt);
 
+  publishInputDebug();
   composer.render();
+}
+
+function publishInputDebug() {
+  const raw = inputManager?.touchMove;
+  const body = humanPlayer?.body;
+  const info = {
+    legend: humanPlayer?.legend?.id ?? null,
+    touchMove: raw
+      ? { x: Number(raw.x.toFixed(3)), z: Number(raw.z.toFixed(3)), len: Number(raw.length().toFixed(3)) }
+      : null,
+    vel: body
+      ? { x: Number(body.velocity.x.toFixed(2)), z: Number(body.velocity.z.toFixed(2)) }
+      : null,
+    sleepState: body?.sleepState ?? null,
+    pos: body
+      ? { x: Number(body.position.x.toFixed(2)), z: Number(body.position.z.toFixed(2)) }
+      : null,
+  };
+  window.__peladaDebug = info;
+
+  const el = document.getElementById('input-debug');
+  if (!el) return;
+  const show = new URLSearchParams(window.location.search).has('debug')
+    || window.__peladaShowDebug === true;
+  el.hidden = !show;
+  if (!show) return;
+  const tm = info.touchMove;
+  const v = info.vel;
+  el.textContent = [
+    `${info.legend ?? '—'}  sleep ${info.sleepState}`,
+    `tm ${tm ? tm.len.toFixed(2) : '0'}  (${tm ? tm.x.toFixed(2) : 0}, ${tm ? tm.z.toFixed(2) : 0})`,
+    `v  ${v ? v.x.toFixed(1) : 0}, ${v ? v.z.toFixed(1) : 0}`,
+    `p  ${info.pos ? info.pos.x.toFixed(1) : 0}, ${info.pos ? info.pos.z.toFixed(1) : 0}`,
+  ].join('\n');
 }
 
 animate();

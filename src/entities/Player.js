@@ -76,7 +76,9 @@ export class Player {
     const speed = PLAYER_SPEED * (this.legend ? this.legend.speed / 90 : 1) * (sprint ? SPRINT_MULTIPLIER : 1);
     this.body.velocity.x = dir.x * speed;
     this.body.velocity.z = dir.z * speed;
-    if (this.body.wakeUp) this.body.wakeUp();
+    // allowSleep: true skips sleeping bodies in world.step — velocity
+    // without wakeUp is why the stick knob moved while YOU stayed frozen.
+    if (typeof this.body.wakeUp === 'function') this.body.wakeUp();
 
     if (dir.lengthSq() > 0.01) {
       this.facingDir.copy(dir).normalize();
