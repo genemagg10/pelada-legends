@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BALL_RADIUS, TEAM_HOME, TEAM_HOME_COLOR, TEAM_AWAY_COLOR } from '../constants.js';
+import { BALL_RADIUS, TEAM_HOME, TEAM_AWAY, TEAM_HOME_COLOR, TEAM_AWAY_COLOR } from '../constants.js';
 import { setShadow } from '../utils/shadows.js';
 import { createSoccerTexture } from '../utils/textures.js';
 
