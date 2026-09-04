@@ -34,7 +34,7 @@ Push to `main` (or run the workflow manually) to publish.
 
 ## Play notes
 
-**YOU** wear gold. **RIVAL** wear deep red. Low-poly pawns (head / torso / legs / feet) with a flat gold ground ring only — no head chevron, no YOU sprite (HUD labels you). Night rooftop: warm sodium (`#1a0a00` / `#332211`), card-brown boards, graffiti gold/ember.
+**YOU** wear gold. **RIVAL** wear deep red. Shared toy-hero mini-figures (big head, tapered torso, chunky shoes, legend accent stripe) with a flat gold ground ring only — no head chevron. Night favela slab: sodium key `#ffb066`, warm fill, ACES 1.25, concrete `#b8a888`, fog `#332211` @ 0.0052. Not cool blue, not FIFA daylight.
 
 Shoots squash-stretch the ball (Y/XZ one frame, spring back, scaled by shot power), leave a short trail, stamp a ground disc, and punch FOV for 80–120ms. The carrier gets a soft team-colored ground ring; the ball tints to that team. Specials fire a legend-colored double-ring shockwave + burst and a 1–2 frame freeze/desat.
 

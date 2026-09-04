@@ -23,7 +23,7 @@ import {
   LEGENDS, TEAM_HOME, TEAM_AWAY, COURT_LENGTH,
   MAX_GINGA, GINGA_CHARGE_RATE, GINGA_CHARGE_ON_DRIBBLE, GINGA_COST,
   MATCH_DURATION, SHOOT_POWER, BALL_POSSESSION_DIST,
-  COLOR_NIGHT, COLOR_FOG, COLOR_GOLD, COLOR_AMBER,
+  COLOR_NIGHT, COLOR_FOG, COLOR_AMBER, COLOR_FILL,
 } from './constants.js';
 
 let renderer, scene, camera, composer;
@@ -69,21 +69,24 @@ function initEngine() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  // Dieter band 1.15–1.25. Top of the range so phone mids still read at night.
+  renderer.toneMappingExposure = 1.25;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
-  // Title-UI warmth, not cool blue: #1a0a00 / #332211, ambient sodium not 0x334466.
+  // Tokens: gold #ffcc00 · ember #ff6600 · night #1a0a00 · fog #332211.
+  // Not cool blue, not FIFA day, not white stadium.
   scene.background = new THREE.Color(COLOR_NIGHT);
-  scene.fog = new THREE.FogExp2(COLOR_FOG, 0.008);
+  scene.fog = new THREE.FogExp2(COLOR_FOG, 0.0052);
 
   camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
 
-  scene.add(new THREE.AmbientLight(0x4a2a14, 0.28));
-  scene.add(new THREE.HemisphereLight(COLOR_AMBER, COLOR_NIGHT, 0.38));
+  scene.add(new THREE.AmbientLight(0x4a2a14, 0.40));
+  scene.add(new THREE.HemisphereLight(COLOR_AMBER, 0x3d2210, 0.54));
 
-  const sun = new THREE.DirectionalLight(COLOR_GOLD, 0.72);
-  sun.position.set(-28, 22, 10);
+  // Key: sodium #ffb066, one shadow caster. +36% vs the old 0.72 gold sun.
+  const sun = new THREE.DirectionalLight(0xffb066, 0.98);
+  sun.position.set(-18, 34, 12);
   setShadow(sun, true, false);
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -50;
@@ -93,13 +96,20 @@ function initEngine() {
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 120;
   sun.shadow.bias = -0.001;
+  sun.shadow.normalBias = 0.03;
+  sun.shadow.radius = 2.5;
   scene.add(sun);
+
+  const fill = new THREE.DirectionalLight(COLOR_FILL, 0.50);
+  fill.position.set(24, 18, -16);
+  fill.castShadow = false;
+  scene.add(fill);
 
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.28, 0.42, 0.86
+    0.26, 0.45, 0.86
   ));
   composer.addPass(new OutputPass());
 
