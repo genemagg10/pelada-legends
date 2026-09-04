@@ -14,7 +14,7 @@ function hashColor(n) {
 
 export function createConcreteTexture(size = 512) {
   const { canvas, ctx } = makeCanvas(size);
-  ctx.fillStyle = '#a89878';
+  ctx.fillStyle = '#b8a888';
   ctx.fillRect(0, 0, size, size);
 
   for (let i = 0; i < 1400; i++) {

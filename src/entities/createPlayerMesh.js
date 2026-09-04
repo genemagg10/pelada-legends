@@ -23,7 +23,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     roughness: 0.52,
     metalness: 0.05,
     emissive: kit,
-    emissiveIntensity: isHome ? 0.18 : 0.08,
+    emissiveIntensity: isHome ? 0.24 : 0.16,
   });
   const darkMat = new THREE.MeshStandardMaterial({
     color: isHome ? 0x3d1f00 : 0x2a0a10,
@@ -34,7 +34,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     color: accent,
     roughness: 0.4,
     emissive: accent,
-    emissiveIntensity: 0.22,
+    emissiveIntensity: 0.28,
   });
   const shoeMat = new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 0.5 });
 
@@ -110,7 +110,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
       new THREE.MeshStandardMaterial({
         color: COLOR_GOLD,
         emissive: COLOR_GOLD,
-        emissiveIntensity: 0.4,
+        emissiveIntensity: 0.58,
         transparent: true,
         opacity: 0.92,
         side: THREE.DoubleSide,
