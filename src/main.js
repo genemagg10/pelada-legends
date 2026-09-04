@@ -69,11 +69,13 @@ function initEngine() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  // Dieter: 1.15–1.25 — lift mids, do not blow bloom.
   renderer.toneMappingExposure = 1.22;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
-  // Arcade favela night: sodium key, warm fill. Not cool blue, not FIFA day.
+  // Tokens: gold #ffcc00 · ember #ff6600 · night #1a0a00 · fog #332211.
+  // Not cool blue, not FIFA day, not white stadium.
   scene.background = new THREE.Color(COLOR_NIGHT);
   scene.fog = new THREE.FogExp2(COLOR_FOG, 0.0056);
 
@@ -82,6 +84,7 @@ function initEngine() {
   scene.add(new THREE.AmbientLight(0x4a2a14, 0.40));
   scene.add(new THREE.HemisphereLight(COLOR_AMBER, 0x3d2210, 0.50));
 
+  // Main was 0.72 gold; Dieter cited ~0.62 +25–40%. 0.98 is +36% from 0.72, #ffb066.
   const sun = new THREE.DirectionalLight(0xffb066, 0.98);
   sun.position.set(-28, 22, 10);
   setShadow(sun, true, false);
