@@ -98,7 +98,7 @@ export class TouchControls {
       e.preventDefault();
       this.reveal();
       this.stickId = e.pointerId;
-      this.stick.setPointerCapture(e.pointerId);
+      try { this.stick.setPointerCapture(e.pointerId); } catch { /* synthetic / already captured */ }
       const ring = this.stick.querySelector('.touch-stick-ring') || this.stick;
       const r = ring.getBoundingClientRect();
       this.originX = r.left + r.width / 2;

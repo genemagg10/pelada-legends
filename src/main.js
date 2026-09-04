@@ -109,6 +109,7 @@ function initEngine() {
   cameraController = new CameraController(camera);
   inputManager = new InputManager();
   touchControls = new TouchControls(inputManager);
+  window.__peladaInput = inputManager;
   aiController = new AIController();
   ghostTrail = new GhostTrailEffect(scene);
   dustSystem = new DustParticleSystem(scene, 200, 0xddbb88);
