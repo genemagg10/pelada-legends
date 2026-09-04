@@ -1,39 +1,40 @@
 import * as THREE from 'three';
 
-/**
- * InputManager handles WASD/Arrow keys, Space, Shift, and E inputs.
- */
+const GAME_KEYS = new Set([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD',
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+  'Space', 'KeyE', 'ShiftLeft', 'ShiftRight',
+]);
+
 export class InputManager {
   constructor() {
     this.keys = {};
     this.justPressed = {};
 
     window.addEventListener('keydown', (e) => {
-      if (!this.keys[e.code]) {
-        this.justPressed[e.code] = true;
-      }
+      if (GAME_KEYS.has(e.code)) e.preventDefault();
+      if (!this.keys[e.code]) this.justPressed[e.code] = true;
       this.keys[e.code] = true;
     });
 
     window.addEventListener('keyup', (e) => {
+      if (GAME_KEYS.has(e.code)) e.preventDefault();
       this.keys[e.code] = false;
     });
   }
 
   getMoveDirection() {
     const dir = new THREE.Vector3(0, 0, 0);
-
     if (this.keys['KeyW'] || this.keys['ArrowUp']) dir.z += 1;
     if (this.keys['KeyS'] || this.keys['ArrowDown']) dir.z -= 1;
     if (this.keys['KeyA'] || this.keys['ArrowLeft']) dir.x -= 1;
     if (this.keys['KeyD'] || this.keys['ArrowRight']) dir.x += 1;
-
     if (dir.lengthSq() > 0) dir.normalize();
     return dir;
   }
 
   isSprinting() {
-    return false; // Sprint is separate from special move now
+    return false;
   }
 
   isShootPressed() {

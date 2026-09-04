@@ -172,13 +172,20 @@ export class PhysicsWorld {
       shape: new CANNON.Cylinder(0.5, 0.5, 1.8, 8),
       position: new CANNON.Vec3(position.x, 0.9, position.z),
       material: this.playerMat,
-      linearDamping: 0.9,
-      angularDamping: 0.99,
+      linearDamping: 0.5,
+      angularDamping: 0.95,
       fixedRotation: true,
     });
     this.world.addBody(body);
     this.playerBodies.push(body);
     return body;
+  }
+
+  clearPlayerBodies() {
+    for (const body of this.playerBodies) {
+      this.world.removeBody(body);
+    }
+    this.playerBodies = [];
   }
 
   resetBall() {

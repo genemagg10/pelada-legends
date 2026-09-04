@@ -2,12 +2,31 @@ import * as THREE from 'three';
 import {
   COURT_WIDTH, COURT_LENGTH, WALL_HEIGHT, WALL_THICKNESS,
   GOAL_WIDTH, GOAL_HEIGHT, GOAL_DEPTH,
+  TEAM_HOME_COLOR, TEAM_AWAY_COLOR,
 } from '../constants.js';
+import { setShadow } from '../utils/shadows.js';
+import {
+  createConcreteTexture,
+  createBrickTexture,
+  createGraffitiTexture,
+} from '../utils/textures.js';
+
+function mulberry32(seed) {
+  let a = seed;
+  return () => {
+    a |= 0;
+    a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
 
 export class CourtBuilder {
   constructor(scene) {
     this.scene = scene;
     this.meshes = [];
+    this.rng = mulberry32(1337);
   }
 
   build() {
@@ -18,98 +37,115 @@ export class CourtBuilder {
     this._createSpectators();
     this._createStreetLamps();
     this._createCourtMarkings();
+    this._createEndBanners();
+    this._createSky();
+  }
+
+  _rand() {
+    return this.rng();
   }
 
   _createCourt() {
-    // Concrete court
-    const courtGeo = new THREE.PlaneGeometry(COURT_WIDTH + 2, COURT_LENGTH + 2);
-    const courtMat = new THREE.MeshStandardMaterial({
-      color: 0x999988,
-      roughness: 0.95,
-      metalness: 0.0,
-    });
-    const court = new THREE.Mesh(courtGeo, courtMat);
+    const concrete = createConcreteTexture();
+    const court = new THREE.Mesh(
+      new THREE.PlaneGeometry(COURT_WIDTH + 2, COURT_LENGTH + 2),
+      new THREE.MeshStandardMaterial({
+        color: 0xc8b59a,
+        map: concrete,
+        roughness: 0.92,
+        metalness: 0.02,
+      })
+    );
     court.rotation.x = -Math.PI / 2;
-    court.receiveShadow = true;
+    setShadow(court, false, true);
     this.scene.add(court);
 
-    // Extended ground for surrounding area
-    const groundGeo = new THREE.PlaneGeometry(200, 200);
-    const groundMat = new THREE.MeshStandardMaterial({
-      color: 0x665544,
-      roughness: 1.0,
-    });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(220, 220),
+      new THREE.MeshStandardMaterial({
+        color: 0x3a2a22,
+        roughness: 1,
+      })
+    );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -0.02;
-    ground.receiveShadow = true;
+    ground.position.y = -0.03;
+    setShadow(ground, false, true);
     this.scene.add(ground);
+
+    const goldTint = new THREE.Mesh(
+      new THREE.PlaneGeometry(COURT_WIDTH - 2, 7),
+      new THREE.MeshBasicMaterial({ color: TEAM_HOME_COLOR, transparent: true, opacity: 0.08 })
+    );
+    goldTint.rotation.x = -Math.PI / 2;
+    goldTint.position.set(0, 0.012, COURT_LENGTH / 2 - 5);
+    this.scene.add(goldTint);
+
+    const redTint = new THREE.Mesh(
+      new THREE.PlaneGeometry(COURT_WIDTH - 2, 7),
+      new THREE.MeshBasicMaterial({ color: TEAM_AWAY_COLOR, transparent: true, opacity: 0.08 })
+    );
+    redTint.rotation.x = -Math.PI / 2;
+    redTint.position.set(0, 0.012, -COURT_LENGTH / 2 + 5);
+    this.scene.add(redTint);
   }
 
   _createCourtMarkings() {
     const lineMat = new THREE.MeshBasicMaterial({
-      color: 0xccccbb,
+      color: 0xfff4d0,
       transparent: true,
-      opacity: 0.3,
+      opacity: 0.78,
     });
 
-    // Center line
-    const centerLine = new THREE.Mesh(
-      new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.15),
-      lineMat
-    );
+    const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.18), lineMat);
     centerLine.rotation.x = -Math.PI / 2;
-    centerLine.position.y = 0.01;
+    centerLine.position.y = 0.015;
     this.scene.add(centerLine);
 
-    // Center circle
-    const circleGeo = new THREE.RingGeometry(4.8, 5, 48);
-    const circle = new THREE.Mesh(circleGeo, lineMat);
+    const circle = new THREE.Mesh(new THREE.RingGeometry(4.7, 5.05, 48), lineMat);
     circle.rotation.x = -Math.PI / 2;
-    circle.position.y = 0.01;
+    circle.position.y = 0.015;
     this.scene.add(circle);
 
-    // Boundary lines
+    const spot = new THREE.Mesh(new THREE.CircleGeometry(0.28, 16), lineMat);
+    spot.rotation.x = -Math.PI / 2;
+    spot.position.y = 0.016;
+    this.scene.add(spot);
+
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
 
-    // Side lines
     for (const x of [-hw + 0.5, hw - 0.5]) {
-      const line = new THREE.Mesh(new THREE.PlaneGeometry(0.12, COURT_LENGTH - 1), lineMat);
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(0.16, COURT_LENGTH - 1), lineMat);
       line.rotation.x = -Math.PI / 2;
-      line.position.set(x, 0.01, 0);
+      line.position.set(x, 0.015, 0);
       this.scene.add(line);
     }
 
-    // End lines
     for (const z of [-hl + 0.5, hl - 0.5]) {
-      const line = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.12), lineMat);
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.16), lineMat);
       line.rotation.x = -Math.PI / 2;
-      line.position.set(0, 0.01, z);
+      line.position.set(0, 0.015, z);
       this.scene.add(line);
     }
 
-    // Penalty areas
     const penW = 14;
     const penD = 8;
     for (const zSign of [-1, 1]) {
       const penZ = zSign * (hl - penD / 2);
       const penOutline = new THREE.Group();
 
-      // Front line
-      const front = new THREE.Mesh(new THREE.PlaneGeometry(penW, 0.1), lineMat);
+      const front = new THREE.Mesh(new THREE.PlaneGeometry(penW, 0.14), lineMat);
       front.position.set(0, 0, -zSign * penD / 2);
       penOutline.add(front);
 
-      // Side lines
       for (const xSign of [-1, 1]) {
-        const side = new THREE.Mesh(new THREE.PlaneGeometry(0.1, penD), lineMat);
+        const side = new THREE.Mesh(new THREE.PlaneGeometry(0.14, penD), lineMat);
         side.position.set(xSign * penW / 2, 0, 0);
         penOutline.add(side);
       }
 
       penOutline.rotation.x = -Math.PI / 2;
-      penOutline.position.set(0, 0.01, penZ);
+      penOutline.position.set(0, 0.015, penZ);
       this.scene.add(penOutline);
     }
   }
@@ -119,72 +155,65 @@ export class CourtBuilder {
     const hl = COURT_LENGTH / 2;
     const hh = WALL_HEIGHT / 2;
     const goalHW = GOAL_WIDTH / 2;
+    const brickMap = createBrickTexture();
 
     const brickMat = new THREE.MeshStandardMaterial({
-      color: 0x994433,
-      roughness: 0.9,
-      metalness: 0.0,
+      color: 0xbb6655,
+      map: brickMap,
+      roughness: 0.88,
+      metalness: 0.02,
     });
 
     const fenceMat = new THREE.MeshStandardMaterial({
-      color: 0x888888,
-      roughness: 0.5,
-      metalness: 0.6,
+      color: 0x9aa0a8,
+      roughness: 0.4,
+      metalness: 0.65,
       transparent: true,
-      opacity: 0.7,
+      opacity: 0.55,
       wireframe: true,
     });
 
-    // Side walls (brick)
     this._addWallMesh(-hw - WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, brickMat);
     this._addWallMesh(hw + WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, brickMat);
 
-    // End walls with goal gaps (fence style)
     const sideSegW = (COURT_WIDTH - GOAL_WIDTH) / 2;
-
-    // Near end (Z = -hl)
     this._addWallMesh(-hw / 2 - goalHW / 2, hh, -hl - WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
     this._addWallMesh(hw / 2 + goalHW / 2, hh, -hl - WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
-
-    // Far end (Z = +hl)
     this._addWallMesh(-hw / 2 - goalHW / 2, hh, hl + WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
     this._addWallMesh(hw / 2 + goalHW / 2, hh, hl + WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
 
-    // Top bars over goals
     this._addWallMesh(0, GOAL_HEIGHT + 0.25, -hl - WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
     this._addWallMesh(0, GOAL_HEIGHT + 0.25, hl + WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
 
-    // Colorful murals on side walls
-    this._addMural(-hw - WALL_THICKNESS - 0.01, hh, -8, 10, WALL_HEIGHT - 0.5, 0xffcc00, 'side');
-    this._addMural(-hw - WALL_THICKNESS - 0.01, hh, 8, 10, WALL_HEIGHT - 0.5, 0x00cc66, 'side');
-    this._addMural(hw + WALL_THICKNESS + 0.01, hh, -5, 12, WALL_HEIGHT - 0.5, 0xff4444, 'side');
-    this._addMural(hw + WALL_THICKNESS + 0.01, hh, 10, 8, WALL_HEIGHT - 0.5, 0x4488ff, 'side');
+    this._addGraffiti(-hw - WALL_THICKNESS - 0.02, hh, -10, 11, WALL_HEIGHT - 0.4, 'PELADA', '#ffcc00');
+    this._addGraffiti(-hw - WALL_THICKNESS - 0.02, hh, 8, 10, WALL_HEIGHT - 0.4, 'GINGA', '#39e07a');
+    this._addGraffiti(hw + WALL_THICKNESS + 0.02, hh, -6, 12, WALL_HEIGHT - 0.4, 'RUA', '#ff4455');
+    this._addGraffiti(hw + WALL_THICKNESS + 0.02, hh, 11, 9, WALL_HEIGHT - 0.4, 'GOOL', '#4c9fff');
   }
 
   _addWallMesh(x, y, z, w, h, d, mat) {
-    const geo = new THREE.BoxGeometry(w, h, d);
-    const mesh = new THREE.Mesh(geo, mat);
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
     mesh.position.set(x, y, z);
-    mesh.castShadow = true;
-    mesh.receiveShadow = true;
+    setShadow(mesh, true, true);
     this.scene.add(mesh);
     this.meshes.push(mesh);
     return mesh;
   }
 
-  _addMural(x, y, z, w, h, color, side) {
-    const geo = new THREE.PlaneGeometry(w, h);
-    const mat = new THREE.MeshStandardMaterial({
-      color,
-      roughness: 0.8,
-      emissive: color,
-      emissiveIntensity: 0.15,
-    });
-    const mesh = new THREE.Mesh(geo, mat);
+  _addGraffiti(x, y, z, w, h, label, accentHex) {
+    const mesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(w, h),
+      new THREE.MeshStandardMaterial({
+        map: createGraffitiTexture(label, accentHex),
+        transparent: true,
+        roughness: 0.7,
+        metalness: 0,
+        emissive: new THREE.Color(accentHex),
+        emissiveIntensity: 0.12,
+      })
+    );
     mesh.position.set(x, y, z);
-    if (side === 'side') {
-      mesh.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2;
-    }
+    mesh.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2;
     this.scene.add(mesh);
   }
 
@@ -194,24 +223,24 @@ export class CourtBuilder {
 
     const postMat = new THREE.MeshStandardMaterial({
       color: 0xffffff,
-      roughness: 0.3,
-      metalness: 0.8,
-    });
-
-    const netMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.3,
-      wireframe: true,
-      side: THREE.DoubleSide,
+      roughness: 0.25,
+      metalness: 0.75,
     });
 
     for (const zSign of [-1, 1]) {
-      const gz = zSign * hl;
-      const goalGroup = new THREE.Group();
+      const attackingHome = zSign === 1;
+      const accent = attackingHome ? TEAM_HOME_COLOR : TEAM_AWAY_COLOR;
+      const netMat = new THREE.MeshStandardMaterial({
+        color: accent,
+        transparent: true,
+        opacity: 0.28,
+        wireframe: true,
+        side: THREE.DoubleSide,
+      });
 
-      // Posts
-      const postGeo = new THREE.CylinderGeometry(0.06, 0.06, GOAL_HEIGHT, 8);
+      const goalGroup = new THREE.Group();
+      const postGeo = new THREE.CylinderGeometry(0.07, 0.07, GOAL_HEIGHT, 8);
+
       const leftPost = new THREE.Mesh(postGeo, postMat);
       leftPost.position.set(-hw, GOAL_HEIGHT / 2, 0);
       goalGroup.add(leftPost);
@@ -220,168 +249,167 @@ export class CourtBuilder {
       rightPost.position.set(hw, GOAL_HEIGHT / 2, 0);
       goalGroup.add(rightPost);
 
-      // Crossbar
-      const crossGeo = new THREE.CylinderGeometry(0.06, 0.06, GOAL_WIDTH, 8);
-      const crossbar = new THREE.Mesh(crossGeo, postMat);
+      const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, GOAL_WIDTH, 8), postMat);
       crossbar.rotation.z = Math.PI / 2;
       crossbar.position.set(0, GOAL_HEIGHT, 0);
       goalGroup.add(crossbar);
 
-      // Net (back)
       const netBack = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_WIDTH, GOAL_HEIGHT, 8, 6), netMat);
-      netBack.position.set(0, GOAL_HEIGHT / 2, -zSign * GOAL_DEPTH);
+      netBack.position.set(0, GOAL_HEIGHT / 2, zSign * GOAL_DEPTH);
       goalGroup.add(netBack);
 
-      // Net (sides)
       for (const xSign of [-1, 1]) {
         const netSide = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_DEPTH, GOAL_HEIGHT, 4, 6), netMat);
         netSide.rotation.y = Math.PI / 2;
-        netSide.position.set(xSign * hw, GOAL_HEIGHT / 2, -zSign * GOAL_DEPTH / 2);
+        netSide.position.set(xSign * hw, GOAL_HEIGHT / 2, zSign * GOAL_DEPTH / 2);
         goalGroup.add(netSide);
       }
 
-      // Net (top)
       const netTop = new THREE.Mesh(new THREE.PlaneGeometry(GOAL_WIDTH, GOAL_DEPTH, 8, 4), netMat);
       netTop.rotation.x = Math.PI / 2;
-      netTop.position.set(0, GOAL_HEIGHT, -zSign * GOAL_DEPTH / 2);
+      netTop.position.set(0, GOAL_HEIGHT, zSign * GOAL_DEPTH / 2);
       goalGroup.add(netTop);
 
-      goalGroup.position.z = gz;
-      goalGroup.traverse(child => {
-        if (child.isMesh) {
-          child.castShadow = true;
-        }
+      goalGroup.position.z = zSign * hl;
+      goalGroup.traverse((child) => {
+        if (child.isMesh) setShadow(child, true, false);
       });
       this.scene.add(goalGroup);
     }
   }
 
+  _createEndBanners() {
+    const hl = COURT_LENGTH / 2;
+    const makeBanner = (text, color, z) => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 64;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#120800';
+      ctx.fillRect(0, 0, 256, 64);
+      ctx.font = '700 34px "Permanent Marker", cursive';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = color;
+      ctx.fillText(text, 128, 34);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      const mesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(6.5, 1.4),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true })
+      );
+      mesh.position.set(-COURT_WIDTH / 2 - 0.6, 2.3, z);
+      mesh.rotation.y = Math.PI / 2;
+      this.scene.add(mesh);
+    };
+
+    makeBanner('YOU SCORE →', '#ffcc00', hl - 8);
+    makeBanner('← RIVAL', '#ff6670', -hl + 8);
+  }
+
   _createBuildings() {
-    const buildingColors = [0x884422, 0x996633, 0x775533, 0xaa6644, 0x664422, 0x887755];
+    const buildingColors = [0x3a2a28, 0x4a3328, 0x2d2430, 0x403028, 0x2a2220, 0x382820];
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
-
-    // Use InstancedMesh for performance
     const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
-    const buildingMats = buildingColors.map(c => new THREE.MeshStandardMaterial({
-      color: c, roughness: 0.9, metalness: 0.0,
+    const buildingMats = buildingColors.map((c) => new THREE.MeshStandardMaterial({
+      color: c, roughness: 0.92, metalness: 0.04,
     }));
 
     const positions = [];
-
-    // Generate building positions around the court
-    for (let i = 0; i < 60; i++) {
-      const side = Math.floor(Math.random() * 4);
-      let x, z;
-      const offset = 6 + Math.random() * 25;
-
+    for (let i = 0; i < 48; i++) {
+      const side = Math.floor(this._rand() * 4);
+      const offset = 7 + this._rand() * 22;
+      let x;
+      let z;
       switch (side) {
-        case 0: x = -hw - offset; z = (Math.random() - 0.5) * COURT_LENGTH * 1.5; break;
-        case 1: x = hw + offset; z = (Math.random() - 0.5) * COURT_LENGTH * 1.5; break;
-        case 2: x = (Math.random() - 0.5) * COURT_WIDTH * 2; z = -hl - offset; break;
-        case 3: x = (Math.random() - 0.5) * COURT_WIDTH * 2; z = hl + offset; break;
+        case 0: x = -hw - offset; z = (this._rand() - 0.5) * COURT_LENGTH * 1.5; break;
+        case 1: x = hw + offset; z = (this._rand() - 0.5) * COURT_LENGTH * 1.5; break;
+        case 2: x = (this._rand() - 0.5) * COURT_WIDTH * 2; z = -hl - offset; break;
+        default: x = (this._rand() - 0.5) * COURT_WIDTH * 2; z = hl + offset; break;
       }
-
-      const w = 4 + Math.random() * 6;
-      const h = 6 + Math.random() * 14;
-      const d = 4 + Math.random() * 6;
-      const colorIdx = Math.floor(Math.random() * buildingColors.length);
-
-      positions.push({ x, z, w, h, d, colorIdx });
+      positions.push({
+        x, z,
+        w: 4 + this._rand() * 6,
+        h: 7 + this._rand() * 16,
+        d: 4 + this._rand() * 6,
+        colorIdx: Math.floor(this._rand() * buildingColors.length),
+      });
     }
 
     for (const b of positions) {
       const mesh = new THREE.Mesh(buildingGeo, buildingMats[b.colorIdx]);
       mesh.scale.set(b.w, b.h, b.d);
       mesh.position.set(b.x, b.h / 2, b.z);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
+      setShadow(mesh, true, true);
       this.scene.add(mesh);
+      this._addWindows(b);
 
-      // Windows (emissive planes)
-      this._addWindows(mesh, b.w, b.h, b.d, b.x, b.z);
-    }
-
-    // Balcony-style overhangs on closest buildings
-    for (let i = 0; i < 10; i++) {
-      const b = positions[i];
-      if (!b) break;
-      const balconyGeo = new THREE.BoxGeometry(b.w * 0.8, 0.2, 1.5);
-      const balconyMat = new THREE.MeshStandardMaterial({ color: 0x666655, roughness: 0.8 });
-      const floors = Math.floor(b.h / 3.5);
-      for (let f = 1; f <= floors; f++) {
-        const balcony = new THREE.Mesh(balconyGeo, balconyMat);
-        const bx = b.x;
-        const bz = b.z + (b.z > 0 ? -b.d / 2 - 0.7 : b.d / 2 + 0.7);
-        balcony.position.set(bx, f * 3.5, bz);
-        balcony.castShadow = true;
-        this.scene.add(balcony);
+      if (this._rand() > 0.55) {
+        const tank = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.6, 0.6, 0.8, 8),
+          new THREE.MeshStandardMaterial({ color: 0x665544, roughness: 0.6, metalness: 0.3 })
+        );
+        tank.position.set(b.x + (this._rand() - 0.5) * b.w * 0.3, b.h + 0.4, b.z);
+        this.scene.add(tank);
       }
     }
   }
 
-  _addWindows(building, w, h, d, bx, bz) {
-    const windowMat = new THREE.MeshStandardMaterial({
-      color: 0xffddaa,
-      emissive: 0xffcc77,
-      emissiveIntensity: Math.random() > 0.4 ? 0.6 : 0,
-      roughness: 0.3,
-    });
-
-    const floors = Math.floor(h / 3.5);
-    const cols = Math.max(1, Math.floor(w / 2.5));
+  _addWindows(b) {
+    const floors = Math.floor(b.h / 3.5);
+    const cols = Math.max(1, Math.floor(b.w / 2.5));
 
     for (let f = 0; f < floors; f++) {
       for (let c = 0; c < cols; c++) {
-        if (Math.random() > 0.7) continue;
-        const winGeo = new THREE.PlaneGeometry(0.8, 1.0);
-        const win = new THREE.Mesh(winGeo, windowMat.clone());
+        if (this._rand() > 0.62) continue;
+        const lit = this._rand() > 0.38;
+        const win = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.75, 0.95),
+          new THREE.MeshStandardMaterial({
+            color: lit ? 0xffe0a8 : 0x22180e,
+            emissive: lit ? 0xffc878 : 0x000000,
+            emissiveIntensity: lit ? 0.55 : 0,
+            roughness: 0.35,
+          })
+        );
 
         const xOffset = (c - (cols - 1) / 2) * 2.2;
         const yPos = f * 3.5 + 2;
-
-        // Place on the face closest to the court
-        const closestFace = Math.abs(bx) > Math.abs(bz) ? 'x' : 'z';
-        if (closestFace === 'x') {
-          win.position.set(bx + (bx > 0 ? -w / 2 - 0.01 : w / 2 + 0.01), yPos, bz + xOffset);
-          win.rotation.y = bx > 0 ? Math.PI / 2 : -Math.PI / 2;
+        if (Math.abs(b.x) > Math.abs(b.z)) {
+          win.position.set(b.x + (b.x > 0 ? -b.w / 2 - 0.01 : b.w / 2 + 0.01), yPos, b.z + xOffset);
+          win.rotation.y = b.x > 0 ? Math.PI / 2 : -Math.PI / 2;
         } else {
-          win.position.set(bx + xOffset, yPos, bz + (bz > 0 ? -d / 2 - 0.01 : d / 2 + 0.01));
-          win.rotation.y = bz > 0 ? Math.PI : 0;
+          win.position.set(b.x + xOffset, yPos, b.z + (b.z > 0 ? -b.d / 2 - 0.01 : b.d / 2 + 0.01));
+          win.rotation.y = b.z > 0 ? Math.PI : 0;
         }
-
         this.scene.add(win);
       }
     }
   }
 
   _createSpectators() {
-    // Simple sprite "spectators" in windows and on rooftops
     const colors = [0xff4444, 0x44ff44, 0xffff44, 0xff8844, 0x4488ff, 0xff44ff];
-    const specGeo = new THREE.PlaneGeometry(0.6, 1.2);
+    const specGeo = new THREE.PlaneGeometry(0.55, 1.1);
+    const hw = COURT_WIDTH / 2;
+    const hl = COURT_LENGTH / 2;
 
-    for (let i = 0; i < 30; i++) {
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      const mat = new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.8,
-        side: THREE.DoubleSide,
-      });
-      const spec = new THREE.Mesh(specGeo, mat);
-
-      const hw = COURT_WIDTH / 2;
-      const hl = COURT_LENGTH / 2;
-      const side = Math.floor(Math.random() * 4);
-      const offset = 8 + Math.random() * 20;
-
-      switch (side) {
-        case 0: spec.position.set(-hw - offset, 4 + Math.random() * 12, (Math.random() - 0.5) * COURT_LENGTH); break;
-        case 1: spec.position.set(hw + offset, 4 + Math.random() * 12, (Math.random() - 0.5) * COURT_LENGTH); break;
-        case 2: spec.position.set((Math.random() - 0.5) * COURT_WIDTH, 4 + Math.random() * 12, -hl - offset); break;
-        case 3: spec.position.set((Math.random() - 0.5) * COURT_WIDTH, 4 + Math.random() * 12, hl + offset); break;
-      }
-
+    for (let i = 0; i < 24; i++) {
+      const spec = new THREE.Mesh(
+        specGeo,
+        new THREE.MeshBasicMaterial({
+          color: colors[Math.floor(this._rand() * colors.length)],
+          transparent: true,
+          opacity: 0.75,
+          side: THREE.DoubleSide,
+        })
+      );
+      const side = Math.floor(this._rand() * 4);
+      const offset = 8 + this._rand() * 18;
+      if (side === 0) spec.position.set(-hw - offset, 4 + this._rand() * 10, (this._rand() - 0.5) * COURT_LENGTH);
+      else if (side === 1) spec.position.set(hw + offset, 4 + this._rand() * 10, (this._rand() - 0.5) * COURT_LENGTH);
+      else if (side === 2) spec.position.set((this._rand() - 0.5) * COURT_WIDTH, 4 + this._rand() * 10, -hl - offset);
+      else spec.position.set((this._rand() - 0.5) * COURT_WIDTH, 4 + this._rand() * 10, hl + offset);
       this.scene.add(spec);
     }
   }
@@ -390,38 +418,60 @@ export class CourtBuilder {
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
     const lampPositions = [
-      [-hw - 3, 0, -hl / 2],
-      [-hw - 3, 0, hl / 2],
-      [hw + 3, 0, -hl / 2],
-      [hw + 3, 0, hl / 2],
+      [-hw - 3, -hl / 2],
+      [-hw - 3, 0],
+      [-hw - 3, hl / 2],
+      [hw + 3, -hl / 2],
+      [hw + 3, 0],
+      [hw + 3, hl / 2],
     ];
 
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x444444, metalness: 0.7, roughness: 0.3 });
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.3 });
+    const housingMat = new THREE.MeshStandardMaterial({
+      color: 0xffe0aa,
+      emissive: 0xffc878,
+      emissiveIntensity: 0.95,
+    });
 
-    for (const [x, , z] of lampPositions) {
-      // Pole
-      const poleGeo = new THREE.CylinderGeometry(0.08, 0.12, 6, 6);
-      const pole = new THREE.Mesh(poleGeo, poleMat);
+    for (const [x, z] of lampPositions) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 6, 6), poleMat);
       pole.position.set(x, 3, z);
-      pole.castShadow = true;
+      setShadow(pole, true, false);
       this.scene.add(pole);
 
-      // Light housing
-      const housingGeo = new THREE.BoxGeometry(0.6, 0.2, 0.6);
-      const housingMat = new THREE.MeshStandardMaterial({
-        color: 0xffddaa,
-        emissive: 0xffcc88,
-        emissiveIntensity: 0.8,
-      });
-      const housing = new THREE.Mesh(housingGeo, housingMat);
+      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.18, 0.7), housingMat);
       housing.position.set(x, 6.1, z);
       this.scene.add(housing);
 
-      // Point light
-      const light = new THREE.PointLight(0xffcc77, 0.8, 30, 1.5);
+      const light = new THREE.PointLight(0xffc878, 1.15, 34, 1.6);
       light.position.set(x, 6, z);
-      light.castShadow = false; // performance
       this.scene.add(light);
     }
+  }
+
+  _createSky() {
+    const starGeo = new THREE.BufferGeometry();
+    const starCount = 120;
+    const positions = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      const theta = this._rand() * Math.PI * 2;
+      const phi = 0.15 + this._rand() * 1.1;
+      const r = 90 + this._rand() * 40;
+      positions[i * 3] = Math.sin(phi) * Math.cos(theta) * r;
+      positions[i * 3 + 1] = Math.abs(Math.cos(phi) * r) + 18;
+      positions[i * 3 + 2] = Math.sin(phi) * Math.sin(theta) * r;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    this.scene.add(new THREE.Points(
+      starGeo,
+      new THREE.PointsMaterial({ color: 0xfff4cc, size: 0.55, sizeAttenuation: true })
+    ));
+
+    const moon = new THREE.Mesh(
+      new THREE.SphereGeometry(3.2, 16, 16),
+      new THREE.MeshBasicMaterial({ color: 0xdde6ff })
+    );
+    moon.position.set(-50, 42, -28);
+    this.scene.add(moon);
   }
 }

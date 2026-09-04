@@ -26,14 +26,16 @@ export const GINGA_CHARGE_ON_PASS = 10;
 export const GINGA_COST = 100;
 export const SHOOT_POWER = 28;
 export const PASS_POWER = 16;
-export const PLAYER_SPEED = 12;
-export const SPRINT_MULTIPLIER = 1.4;
+export const PLAYER_SPEED = 22;
+export const SPRINT_MULTIPLIER = 1.5;
 export const AI_REACTION_DELAY = 0.3;
 export const BALL_POSSESSION_DIST = 1.8;
 
 // ── Teams ──
 export const TEAM_HOME = 0;
 export const TEAM_AWAY = 1;
+export const TEAM_HOME_COLOR = 0xffcc22;
+export const TEAM_AWAY_COLOR = 0xd41f32;
 
 // ── Legend Roster ──
 export const LEGENDS = [

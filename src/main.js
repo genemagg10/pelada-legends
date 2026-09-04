@@ -4,6 +4,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 
+import './style.css';
 import { PhysicsWorld } from './systems/PhysicsWorld.js';
 import { CourtBuilder } from './systems/CourtBuilder.js';
 import { CameraController } from './systems/CameraController.js';
@@ -15,19 +16,18 @@ import { Player } from './entities/Player.js';
 import { UIManager } from './ui/UIManager.js';
 import { GhostTrailEffect } from './shaders/ghostTrail.js';
 import { DustParticleSystem } from './shaders/dustParticle.js';
+import { setShadow } from './utils/shadows.js';
 import {
-  LEGENDS, TEAM_HOME, TEAM_AWAY, COURT_LENGTH, COURT_WIDTH,
+  LEGENDS, TEAM_HOME, TEAM_AWAY, COURT_LENGTH,
   MAX_GINGA, GINGA_CHARGE_RATE, GINGA_CHARGE_ON_DRIBBLE, GINGA_COST,
-  MATCH_DURATION, SHOOT_POWER, PASS_POWER,
+  MATCH_DURATION, SHOOT_POWER, BALL_POSSESSION_DIST,
 } from './constants.js';
 
-// ── Game globals (populated during init) ──
 let renderer, scene, camera, composer;
 let physics, cameraController, inputManager, aiController;
-let ghostTrail, dustSystem, ballEntity, specialMoveManager;
+let ghostTrail, dustSystem, sparkSystem, ballEntity, specialMoveManager;
 let engineReady = false;
 
-// ── Game State ──
 let gameState = 'menu';
 let scoreHome = 0;
 let scoreAway = 0;
@@ -38,14 +38,10 @@ let allPlayers = [];
 let goalCooldown = 0;
 let dustTimer = 0;
 
-// ══════════════════════════════════════════════════════
-// 1. Initialize UI FIRST (pure DOM, always succeeds)
-// ══════════════════════════════════════════════════════
 const uiManager = new UIManager();
 
 uiManager.onStartGame = (selectedLegend) => {
   if (!engineReady) {
-    // Try to init engine now if it wasn't ready
     try {
       initEngine();
     } catch (e) {
@@ -57,81 +53,68 @@ uiManager.onStartGame = (selectedLegend) => {
   startMatch(selectedLegend);
 };
 
-// ══════════════════════════════════════════════════════
-// 2. Initialize 3D engine (may fail without WebGL)
-// ══════════════════════════════════════════════════════
 function initEngine() {
   if (engineReady) return;
 
   const canvas = document.getElementById('game-canvas');
 
-  // ── Renderer ──
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.2;
+  renderer.toneMappingExposure = 1.05;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-  // ── Scene ──
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x1a0a00);
-  scene.fog = new THREE.FogExp2(0x332211, 0.008);
+  scene.background = new THREE.Color(0x0a1220);
+  scene.fog = new THREE.FogExp2(0x10182a, 0.011);
 
-  // ── Camera ──
-  camera = new THREE.PerspectiveCamera(
-    55, window.innerWidth / window.innerHeight, 0.1, 300
-  );
+  camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
 
-  // ── Lighting: Golden Hour ──
-  scene.add(new THREE.AmbientLight(0xffddaa, 0.3));
-  scene.add(new THREE.HemisphereLight(0xffaa44, 0x443322, 0.5));
+  scene.add(new THREE.AmbientLight(0x334466, 0.32));
+  scene.add(new THREE.HemisphereLight(0x4a68a0, 0x2a160c, 0.42));
 
-  const sunLight = new THREE.DirectionalLight(0xff8833, 2.0);
-  sunLight.position.set(-40, 15, -20);
-  sunLight.castShadow = true;
-  sunLight.shadow.mapSize.set(2048, 2048);
-  sunLight.shadow.camera.left = -50;
-  sunLight.shadow.camera.right = 50;
-  sunLight.shadow.camera.top = 50;
-  sunLight.shadow.camera.bottom = -50;
-  sunLight.shadow.camera.near = 1;
-  sunLight.shadow.camera.far = 120;
-  sunLight.shadow.bias = -0.001;
-  scene.add(sunLight);
+  const moonLight = new THREE.DirectionalLight(0x8899cc, 0.28);
+  moonLight.position.set(40, 50, -18);
+  scene.add(moonLight);
 
-  const fillLight = new THREE.DirectionalLight(0xffcc88, 0.4);
-  fillLight.position.set(20, 10, 30);
-  scene.add(fillLight);
+  const lampKey = new THREE.DirectionalLight(0xffb066, 0.62);
+  lampKey.position.set(-22, 20, 8);
+  setShadow(lampKey, true, false);
+  lampKey.shadow.mapSize.set(2048, 2048);
+  lampKey.shadow.camera.left = -50;
+  lampKey.shadow.camera.right = 50;
+  lampKey.shadow.camera.top = 50;
+  lampKey.shadow.camera.bottom = -50;
+  lampKey.shadow.camera.near = 1;
+  lampKey.shadow.camera.far = 120;
+  lampKey.shadow.bias = -0.001;
+  scene.add(lampKey);
 
-  // ── Post-Processing ──
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.4, 0.6, 0.85
+    0.28, 0.42, 0.86
   ));
   composer.addPass(new OutputPass());
 
-  // ── Physics & Court ──
   physics = new PhysicsWorld();
-  const courtBuilder = new CourtBuilder(scene);
-  courtBuilder.build();
+  new CourtBuilder(scene).build();
 
-  // ── Systems ──
   cameraController = new CameraController(camera);
   inputManager = new InputManager();
   aiController = new AIController();
   ghostTrail = new GhostTrailEffect(scene);
-  dustSystem = new DustParticleSystem(scene);
+  dustSystem = new DustParticleSystem(scene, 200, 0xddbb88);
+  sparkSystem = new DustParticleSystem(scene, 80, 0xffe088);
   ballEntity = new Ball(scene, physics.ballBody);
   specialMoveManager = new SpecialMoveManager(physics, ghostTrail);
 
   engineReady = true;
 
-  // ── Resize ──
   window.addEventListener('resize', () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
@@ -142,63 +125,46 @@ function initEngine() {
   });
 }
 
-// Try to init immediately (but don't die if it fails)
 try {
   initEngine();
 } catch (e) {
   console.error('Deferred engine init – will retry on game start:', e);
 }
 
-// ══════════════════════════════════════════════════════
-// 3. Match lifecycle
-// ══════════════════════════════════════════════════════
 function startMatch(selectedLegend) {
-  // Clear existing players
-  for (const p of allPlayers) {
-    scene.remove(p.mesh);
-  }
+  for (const p of allPlayers) p.dispose();
   allPlayers = [];
+  if (physics) physics.clearPlayerBodies();
 
-  // Home team (player's team) – attacking toward +Z
   const homePositions = [
     { x: 0, z: -10 },
     { x: -8, z: -5 },
     { x: 8, z: -5 },
   ];
-
-  // Away team – attacking toward -Z
   const awayPositions = [
     { x: 0, z: 10 },
     { x: -8, z: 5 },
     { x: 8, z: 5 },
   ];
 
-  const availableLegends = LEGENDS.filter(l => l.id !== selectedLegend.id);
+  const availableLegends = LEGENDS.filter((l) => l.id !== selectedLegend.id);
 
-  // Human player
   const humanBody = physics.createPlayerBody(homePositions[0]);
   humanPlayer = new Player(scene, humanBody, selectedLegend, TEAM_HOME, true);
   allPlayers.push(humanPlayer);
 
-  // Home AI teammates
   for (let i = 1; i < homePositions.length; i++) {
-    const legend = availableLegends.splice(
-      Math.floor(Math.random() * availableLegends.length), 1
-    )[0];
+    const legend = availableLegends.splice(Math.floor(Math.random() * availableLegends.length), 1)[0];
     const body = physics.createPlayerBody(homePositions[i]);
     allPlayers.push(new Player(scene, body, legend, TEAM_HOME, false));
   }
 
-  // Away team
   for (let i = 0; i < awayPositions.length; i++) {
-    const legend = availableLegends.splice(
-      Math.floor(Math.random() * availableLegends.length), 1
-    )[0];
+    const legend = availableLegends.splice(Math.floor(Math.random() * availableLegends.length), 1)[0];
     const body = physics.createPlayerBody(awayPositions[i]);
     allPlayers.push(new Player(scene, body, legend, TEAM_AWAY, false));
   }
 
-  // Reset game state
   scoreHome = 0;
   scoreAway = 0;
   matchTime = MATCH_DURATION;
@@ -206,15 +172,14 @@ function startMatch(selectedLegend) {
   goalCooldown = 0;
   gameState = 'playing';
   physics.resetBall();
+  ballEntity.setTrail(false);
 
   uiManager.updateScore(0, 0);
   uiManager.updateGinga(0);
+  uiManager.updatePossession(null);
   uiManager.showMessage('KICK OFF!', 2000);
 }
 
-// ══════════════════════════════════════════════════════
-// 4. Goal detection
-// ══════════════════════════════════════════════════════
 function checkGoals() {
   if (goalCooldown > 0) return;
 
@@ -255,7 +220,8 @@ function resetPlayerPositions() {
   const awayZ = [10, 5, 5];
   const awayX = [0, -8, 8];
 
-  let hi = 0, ai = 0;
+  let hi = 0;
+  let ai = 0;
   for (const p of allPlayers) {
     if (p.team === TEAM_HOME) {
       p.body.position.set(homeX[hi], 0.9, homeZ[hi]);
@@ -269,17 +235,40 @@ function resetPlayerPositions() {
   }
 }
 
-// ══════════════════════════════════════════════════════
-// 5. Input processing
-// ══════════════════════════════════════════════════════
+function assignPossession(ballPos) {
+  let best = null;
+  let bestDist = BALL_POSSESSION_DIST;
+  for (const player of allPlayers) {
+    player.hasBall = false;
+    if (player.distanceToBall < bestDist) {
+      bestDist = player.distanceToBall;
+      best = player;
+    }
+  }
+  if (best) best.hasBall = true;
+  uiManager.updatePossession(best);
+}
+
+function cameraRelativeMove(raw) {
+  const forward = new THREE.Vector3();
+  camera.getWorldDirection(forward);
+  forward.y = 0;
+  if (forward.lengthSq() < 0.0001) forward.set(0, 0, 1);
+  else forward.normalize();
+  const right = new THREE.Vector3().crossVectors(forward, new THREE.Vector3(0, 1, 0)).normalize();
+  const move = new THREE.Vector3().addScaledVector(right, raw.x).addScaledVector(forward, raw.z);
+  if (move.lengthSq() > 0) move.normalize();
+  return move;
+}
+
 function processInput(dt) {
   if (!humanPlayer || gameState !== 'playing') return;
 
-  const moveDir = inputManager.getMoveDirection();
+  const raw = inputManager.getMoveDirection();
   const isMoving = inputManager.isMoving();
+  const moveDir = cameraRelativeMove(raw);
   humanPlayer.move(moveDir, isMoving);
 
-  // Dust when moving
   if (isMoving && moveDir.lengthSq() > 0.1) {
     dustTimer += dt;
     if (dustTimer > 0.1) {
@@ -288,7 +277,6 @@ function processInput(dt) {
     }
   }
 
-  // Shoot
   if (inputManager.isShootPressed() && humanPlayer.hasBall) {
     const shootDir = humanPlayer.getGoalDir();
     const shootData = humanPlayer.shoot(shootDir, SHOOT_POWER);
@@ -301,19 +289,31 @@ function processInput(dt) {
       }
     }
 
+    const power = shootData.power * powerMult;
     physics.ballBody.velocity.set(
-      shootData.direction.x * shootData.power * powerMult,
-      3 + Math.random() * 2,
-      shootData.direction.z * shootData.power * powerMult
+      shootData.direction.x * power,
+      4.2 + Math.random() * 1.8,
+      shootData.direction.z * power
+    );
+    physics.ballBody.angularVelocity.set(
+      (Math.random() - 0.5) * 18,
+      (Math.random() - 0.5) * 12,
+      (Math.random() - 0.5) * 18
     );
 
     ginga = Math.min(MAX_GINGA, ginga + 5);
-    dustSystem.emit(physics.ballBody.position.x, 0, physics.ballBody.position.z, 8);
+    const bx = physics.ballBody.position.x;
+    const bz = physics.ballBody.position.z;
+    dustSystem.emitBurst(bx, 0, bz, 14);
+    sparkSystem.emitBurst(bx, 0.2, bz, 18);
+    ballEntity.setTrail(true, 0xffcc66, 0.45);
+    cameraController.punch(1.25);
+    uiManager.flashShoot();
+    humanPlayer.hasBall = false;
   }
 
-  // Pass
   if (inputManager.isPassPressed() && humanPlayer.hasBall) {
-    const teammates = allPlayers.filter(p => p.team === TEAM_HOME && p !== humanPlayer);
+    const teammates = allPlayers.filter((p) => p.team === TEAM_HOME && p !== humanPlayer);
     if (teammates.length > 0) {
       let best = teammates[0];
       let bestScore = -Infinity;
@@ -338,7 +338,6 @@ function processInput(dt) {
     }
   }
 
-  // Special move
   if (inputManager.isSpecialPressed() && ginga >= GINGA_COST) {
     if (specialMoveManager.activate(humanPlayer, ballEntity, ginga)) {
       ginga = 0;
@@ -348,12 +347,8 @@ function processInput(dt) {
   inputManager.clearJustPressed();
 }
 
-// ══════════════════════════════════════════════════════
-// 6. Ginga & timer
-// ══════════════════════════════════════════════════════
 function updateGinga(dt) {
   if (gameState !== 'playing') return;
-
   ginga = Math.min(MAX_GINGA, ginga + GINGA_CHARGE_RATE * dt);
   if (humanPlayer && humanPlayer.hasBall) {
     ginga = Math.min(MAX_GINGA, ginga + GINGA_CHARGE_ON_DRIBBLE * dt * 0.5);
@@ -375,16 +370,12 @@ function updateMatchTimer(dt) {
     uiManager.showMessage(result, 5000);
 
     setTimeout(() => {
-      document.getElementById('select-screen').classList.remove('hidden');
-      document.getElementById('hud').classList.remove('visible');
+      uiManager.showMenu();
       gameState = 'menu';
     }, 5000);
   }
 }
 
-// ══════════════════════════════════════════════════════
-// 7. Main game loop
-// ══════════════════════════════════════════════════════
 const clock = new THREE.Clock();
 
 function animate() {
@@ -401,8 +392,9 @@ function animate() {
     for (const player of allPlayers) {
       player.update(dt, ballPos);
     }
+    assignPossession(ballPos);
 
-    const aiPlayers = allPlayers.filter(p => !p.isHuman);
+    const aiPlayers = allPlayers.filter((p) => !p.isHuman);
     aiController.update(
       dt, aiPlayers, humanPlayer, physics.ballBody,
       allPlayers, allPlayers, { home: scoreHome, away: scoreAway }
@@ -423,10 +415,10 @@ function animate() {
     goalCooldown = Math.max(0, goalCooldown - dt);
   }
 
-  // Always update visuals
   ballEntity.update();
   ghostTrail.update(dt);
   dustSystem.update(dt);
+  sparkSystem.update(dt);
 
   composer.render();
 }
