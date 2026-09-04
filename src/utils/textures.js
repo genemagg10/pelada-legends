@@ -14,23 +14,23 @@ function hashColor(n) {
 
 let noiseSource = null;
 
-/** One shared albedo noise. Tint with material.color — no extra PBR maps. */
+/** One shared albedo noise. Neutral grain so material.color is the tint. */
 export function createNoiseMap(repeatX = 4, repeatY = 4, size = 256) {
   if (!noiseSource) {
     const { canvas, ctx } = makeCanvas(size);
-    ctx.fillStyle = '#9a8a72';
+    ctx.fillStyle = '#e4e0d8';
     ctx.fillRect(0, 0, size, size);
     for (let i = 0; i < 900; i++) {
       const x = hashColor(i + 2) * size;
       const y = hashColor(i + 9) * size;
       const r = 3 + hashColor(i + 17) * 18;
-      const shade = 110 + hashColor(i + 31) * 70;
-      ctx.fillStyle = `rgba(${shade + 16},${shade},${shade - 14},${0.05 + hashColor(i) * 0.1})`;
+      const shade = 180 + hashColor(i + 31) * 55;
+      ctx.fillStyle = `rgba(${shade},${shade - 4},${shade - 10},${0.08 + hashColor(i) * 0.12})`;
       ctx.beginPath();
       ctx.arc(x, y, r, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.strokeStyle = 'rgba(40, 28, 18, 0.16)';
+    ctx.strokeStyle = 'rgba(40, 28, 18, 0.08)';
     ctx.lineWidth = 1;
     for (let i = 0; i < 12; i++) {
       ctx.beginPath();
