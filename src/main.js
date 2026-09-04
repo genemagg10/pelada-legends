@@ -365,8 +365,7 @@ function processInput(dt) {
       ginga = 0;
       const color = humanPlayer.legend?.color ?? 0xffcc00;
       const p = humanPlayer.body.position;
-      vfx.shockwave(p.x, p.z, color);
-      vfx.burst(p.x, 0.9, p.z, color);
+      vfx.specialBurst(p.x, 0.9, p.z, color);
       sparkSystem.emitBurst(p.x, 0.4, p.z, 16);
       cameraController.punch(1.05);
       uiManager.flashDesat();

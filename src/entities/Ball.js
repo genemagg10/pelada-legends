@@ -39,7 +39,8 @@ export class Ball {
     this.trailColor = 0xffe08a;
     this.autoTrailUntil = 0;
     this.kickTimer = 0;
-    this.kickDuration = 0.16;
+    this.kickHold = 0;
+    this.scaleVel = new THREE.Vector3();
     this.prevSpeed = 0;
     this.prevVy = 0;
     this.possessionTeam = null;
@@ -53,8 +54,11 @@ export class Ball {
   }
 
   kickJuice(power = 20) {
-    this.kickTimer = this.kickDuration;
-    const n = THREE.MathUtils.clamp(power / 28, 0.4, 1.2);
+    const n = THREE.MathUtils.clamp(power / 28, 0.4, 1.35);
+    this.kickTimer = 0.26;
+    this.kickHold = 0.034;
+    this.scaleVel.set(0, 0, 0);
+    this.mesh.scale.set(1 + 0.38 * n, Math.max(0.4, 1 - 0.52 * n), 1 + 0.38 * n);
     this.setTrail(true, 0xffe8a0, 0.22 + n * 0.12);
   }
 
@@ -92,11 +96,19 @@ export class Ball {
 
     if (this.kickTimer > 0) {
       this.kickTimer = Math.max(0, this.kickTimer - dt);
-      const t = this.kickTimer / this.kickDuration;
-      if (t > 0.55) {
-        this.mesh.scale.set(1.28, 0.62, 1.28);
+      if (this.kickHold > 0) {
+        this.kickHold -= dt;
       } else {
-        this.mesh.scale.set(0.78, 0.78, 1.36);
+        const stiff = 82;
+        const damp = 10;
+        const s = this.mesh.scale;
+        const v = this.scaleVel;
+        v.x += (stiff * (1 - s.x) - damp * v.x) * dt;
+        v.y += (stiff * (1 - s.y) - damp * v.y) * dt;
+        v.z += (stiff * (1 - s.z) - damp * v.z) * dt;
+        s.x += v.x * dt;
+        s.y += v.y * dt;
+        s.z += v.z * dt;
       }
     } else if (speed > 11) {
       const k = THREE.MathUtils.clamp((speed - 11) / 22, 0, 0.28);

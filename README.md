@@ -36,7 +36,7 @@ Push to `main` (or run the workflow manually) to publish.
 
 **YOU** wear gold. **RIVAL** wear deep red. Low-poly pawns (head / torso / legs / feet) with a flat gold ground ring only — no head chevron, no YOU sprite (HUD labels you). Night rooftop: warm sodium (`#1a0a00` / `#332211`), card-brown boards, graffiti gold/ember.
 
-Shoots squash-stretch the ball, leave a short trail, stamp a ground disc, and punch FOV for 80–120ms. The carrier gets a soft team-colored ground ring; the ball tints to that team. Specials fire a colored burst + shockwave and a 1–2 frame freeze/desat.
+Shoots squash-stretch the ball (Y/XZ one frame, spring back, scaled by shot power), leave a short trail, stamp a ground disc, and punch FOV for 80–120ms. The carrier gets a soft team-colored ground ring; the ball tints to that team. Specials fire a legend-colored double-ring shockwave + burst and a 1–2 frame freeze/desat.
 
 ### Controls
 
