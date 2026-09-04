@@ -50,7 +50,7 @@ export class CourtBuilder {
     const court = new THREE.Mesh(
       new THREE.PlaneGeometry(COURT_WIDTH + 2, COURT_LENGTH + 2),
       new THREE.MeshStandardMaterial({
-        color: 0xc8b59a,
+        color: 0xddc8a8,
         map: concrete,
         roughness: 0.92,
         metalness: 0.02,
@@ -185,10 +185,10 @@ export class CourtBuilder {
     this._addWallMesh(0, GOAL_HEIGHT + 0.25, -hl - WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
     this._addWallMesh(0, GOAL_HEIGHT + 0.25, hl + WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
 
-    this._addGraffiti(-hw - WALL_THICKNESS - 0.02, hh, -10, 11, WALL_HEIGHT - 0.4, 'PELADA', '#ffcc00');
-    this._addGraffiti(-hw - WALL_THICKNESS - 0.02, hh, 8, 10, WALL_HEIGHT - 0.4, 'GINGA', '#39e07a');
-    this._addGraffiti(hw + WALL_THICKNESS + 0.02, hh, -6, 12, WALL_HEIGHT - 0.4, 'RUA', '#ff4455');
-    this._addGraffiti(hw + WALL_THICKNESS + 0.02, hh, 11, 9, WALL_HEIGHT - 0.4, 'GOOL', '#4c9fff');
+    this._addGraffiti(-hw + 0.08, hh, -10, 11, WALL_HEIGHT - 0.4, 'PELADA', '#ffcc00', Math.PI / 2);
+    this._addGraffiti(-hw + 0.08, hh, 8, 10, WALL_HEIGHT - 0.4, 'GINGA', '#39e07a', Math.PI / 2);
+    this._addGraffiti(hw - 0.08, hh, -6, 12, WALL_HEIGHT - 0.4, 'RUA', '#ff4455', -Math.PI / 2);
+    this._addGraffiti(hw - 0.08, hh, 11, 9, WALL_HEIGHT - 0.4, 'GOOL', '#4c9fff', -Math.PI / 2);
   }
 
   _addWallMesh(x, y, z, w, h, d, mat) {
@@ -200,7 +200,7 @@ export class CourtBuilder {
     return mesh;
   }
 
-  _addGraffiti(x, y, z, w, h, label, accentHex) {
+  _addGraffiti(x, y, z, w, h, label, accentHex, rotY) {
     const mesh = new THREE.Mesh(
       new THREE.PlaneGeometry(w, h),
       new THREE.MeshStandardMaterial({
@@ -209,11 +209,12 @@ export class CourtBuilder {
         roughness: 0.7,
         metalness: 0,
         emissive: new THREE.Color(accentHex),
-        emissiveIntensity: 0.12,
+        emissiveIntensity: 0.28,
+        side: THREE.DoubleSide,
       })
     );
     mesh.position.set(x, y, z);
-    mesh.rotation.y = x < 0 ? -Math.PI / 2 : Math.PI / 2;
+    mesh.rotation.y = rotY;
     this.scene.add(mesh);
   }
 
@@ -298,8 +299,8 @@ export class CourtBuilder {
         new THREE.PlaneGeometry(6.5, 1.4),
         new THREE.MeshBasicMaterial({ map: tex, transparent: true })
       );
-      mesh.position.set(-COURT_WIDTH / 2 - 0.6, 2.3, z);
-      mesh.rotation.y = Math.PI / 2;
+      mesh.position.set(COURT_WIDTH / 2 - 0.12, 2.4, z);
+      mesh.rotation.y = -Math.PI / 2;
       this.scene.add(mesh);
     };
 

@@ -17,8 +17,10 @@ export function createPlayerMesh({ team, legend, isHuman }) {
 
   const jerseyMat = new THREE.MeshStandardMaterial({
     color: jersey,
-    roughness: 0.55,
-    metalness: 0.08,
+    roughness: 0.48,
+    metalness: 0.06,
+    emissive: jersey,
+    emissiveIntensity: 0.18,
   });
   const shortsMat = new THREE.MeshStandardMaterial({ color: shorts, roughness: 0.7 });
   const sockMat = new THREE.MeshStandardMaterial({ color: socks, roughness: 0.75 });
@@ -37,7 +39,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
   setShadow(hips, true, true);
   group.add(hips);
 
-  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.52, 0.3), jerseyMat);
+  const torso = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.54, 0.34), jerseyMat);
   torso.position.y = 1.16;
   setShadow(torso, true, true);
   group.add(torso);
@@ -67,25 +69,25 @@ export function createPlayerMesh({ team, legend, isHuman }) {
   group.add(hairCap);
 
   for (const side of [-1, 1]) {
-    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.38, 0.12), jerseyMat);
-    upper.position.set(side * 0.34, 1.18, 0);
-    upper.rotation.z = side * 0.12;
+    const upper = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.4, 0.16), jerseyMat);
+    upper.position.set(side * 0.38, 1.18, 0);
+    upper.rotation.z = side * 0.16;
     setShadow(upper, true, false);
     group.add(upper);
 
-    const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.3, 0.1), skinMat);
-    forearm.position.set(side * 0.4, 0.88, 0.04);
-    forearm.rotation.z = side * 0.18;
+    const forearm = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.32, 0.13), skinMat);
+    forearm.position.set(side * 0.48, 0.86, 0.05);
+    forearm.rotation.z = side * 0.22;
     setShadow(forearm, true, false);
     group.add(forearm);
 
-    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.38, 0.16), shortsMat);
-    thigh.position.set(side * 0.13, 0.58, 0);
+    const thigh = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.4, 0.18), shortsMat);
+    thigh.position.set(side * 0.14, 0.56, 0);
     setShadow(thigh, true, false);
     group.add(thigh);
 
-    const calf = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.34, 0.13), sockMat);
-    calf.position.set(side * 0.13, 0.24, 0);
+    const calf = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.34, 0.15), sockMat);
+    calf.position.set(side * 0.14, 0.22, 0);
     setShadow(calf, true, false);
     group.add(calf);
 
@@ -134,15 +136,6 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     humanMarker.rotation.x = Math.PI / 2;
     humanMarker.position.y = 0.04;
     group.add(humanMarker);
-
-    const chevron = new THREE.Mesh(
-      new THREE.ConeGeometry(0.14, 0.18, 4),
-      new THREE.MeshBasicMaterial({ color: 0xffcc00 })
-    );
-    chevron.position.y = 2.08;
-    chevron.rotation.x = Math.PI;
-    group.add(chevron);
-    humanMarker.userData.chevron = chevron;
 
     youSprite = new THREE.Sprite(new THREE.SpriteMaterial({
       map: createYouSpriteTexture(),

@@ -80,7 +80,7 @@ function initEngine() {
   moonLight.position.set(40, 50, -18);
   scene.add(moonLight);
 
-  const lampKey = new THREE.DirectionalLight(0xffb066, 0.62);
+  const lampKey = new THREE.DirectionalLight(0xffb066, 0.85);
   lampKey.position.set(-22, 20, 8);
   setShadow(lampKey, true, false);
   lampKey.shadow.mapSize.set(2048, 2048);

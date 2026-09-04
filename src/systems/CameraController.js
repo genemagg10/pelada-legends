@@ -9,7 +9,7 @@ export class CameraController {
   constructor(camera) {
     this.camera = camera;
     this.target = new THREE.Vector3(0, 0, 0);
-    this.offset = new THREE.Vector3(35, 24, 0);
+    this.offset = new THREE.Vector3(26, 16, 0);
     this.smoothness = 3;
     this.shake = 0;
     this.punchZoom = 0;
@@ -57,7 +57,7 @@ export class CameraController {
   }
 
   setMatchView() {
-    this.offset.set(35, 24, 0);
+    this.offset.set(26, 16, 0);
     this.smoothness = 3;
   }
 }

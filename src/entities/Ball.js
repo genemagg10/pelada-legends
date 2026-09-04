@@ -13,8 +13,8 @@ export class Ball {
       map: createSoccerTexture(),
       roughness: 0.35,
       metalness: 0.05,
-      emissive: 0x222018,
-      emissiveIntensity: 0.35,
+      emissive: 0x332810,
+      emissiveIntensity: 0.55,
     });
     this.mesh = new THREE.Mesh(geo, mat);
     setShadow(this.mesh, true, false);

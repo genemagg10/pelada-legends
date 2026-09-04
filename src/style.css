@@ -70,7 +70,7 @@ body {
   align-content: flex-start;
   gap: 12px;
   padding: 8px 4px 16px;
-  width: min(1100px, 96vw);
+  width: min(1240px, 96vw);
   max-height: min(58vh, 520px);
   overflow-y: auto;
   overflow-x: hidden;
@@ -88,8 +88,8 @@ body {
 }
 
 .legend-card {
-  flex: 0 1 148px;
-  width: 148px;
+  flex: 0 1 154px;
+  width: 154px;
   min-height: 268px;
   border: 3px solid #553300;
   border-radius: 8px;

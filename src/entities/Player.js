@@ -56,11 +56,11 @@ export class Player {
     }
 
     if (this.humanMarker) {
-      this.humanMarker.material.opacity = 0.7 + Math.sin(t * 3) * 0.2;
+      this.humanMarker.material.opacity = 0.75 + Math.sin(t * 3) * 0.2;
       this.humanMarker.scale.setScalar(1 + Math.sin(t * 2.4) * 0.06);
-      if (this.humanMarker.userData.chevron) {
-        this.humanMarker.userData.chevron.position.y = 2.08 + Math.sin(t * 2) * 0.08;
-      }
+    }
+    if (this.youSprite) {
+      this.youSprite.position.y = 2.22 + Math.sin(t * 2) * 0.06;
     }
 
     if (this.specialTimer > 0) {
