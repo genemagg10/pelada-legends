@@ -12,7 +12,7 @@ export const BALL_RADIUS = 0.4;
 export const BALL_MASS = 0.45;
 export const BALL_RESTITUTION = 0.75;
 export const WALL_RESTITUTION = 0.85;
-export const PLAYER_RADIUS = 0.6;
+export const PLAYER_RADIUS = 0.5;
 export const PLAYER_HEIGHT = 1.8;
 export const PLAYER_MASS = 75;
 export const GRAVITY = -15;
@@ -26,14 +26,31 @@ export const GINGA_CHARGE_ON_PASS = 10;
 export const GINGA_COST = 100;
 export const SHOOT_POWER = 28;
 export const PASS_POWER = 16;
-export const PLAYER_SPEED = 12;
-export const SPRINT_MULTIPLIER = 1.4;
+export const PLAYER_SPEED = 22;
+export const SPRINT_MULTIPLIER = 1.5;
 export const AI_REACTION_DELAY = 0.3;
 export const BALL_POSSESSION_DIST = 1.8;
 
 // ── Teams ──
 export const TEAM_HOME = 0;
 export const TEAM_AWAY = 1;
+export const TEAM_HOME_COLOR = 0xffcc00;
+export const TEAM_AWAY_COLOR = 0xcc2233;
+
+// ── Dieter visual tokens ──
+export const COLOR_GOLD = 0xffcc00;
+export const COLOR_EMBER = 0xff6600;
+export const COLOR_AMBER = 0xff9944;
+export const COLOR_NIGHT = 0x1a0a00;
+export const COLOR_CARD = 0x3d1f00;
+export const COLOR_CARD_DARK = 0x221100;
+export const COLOR_FOG = 0x332211;
+export const COLOR_CONCRETE = 0xa89878;
+export const COLOR_DIRT = 0x8a7058;
+export const COLOR_LINE = 0xe8e0d0;
+export const COLOR_WINDOW_A = 0xffcc66;
+export const COLOR_WINDOW_B = 0xff9944;
+export const COLOR_BALL = 0xf0ebe0;
 
 // ── Legend Roster ──
 export const LEGENDS = [

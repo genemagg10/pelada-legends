@@ -1,8 +1,5 @@
-import { LEGENDS, MAX_GINGA, MATCH_DURATION } from '../constants.js';
+import { LEGENDS, MAX_GINGA, TEAM_HOME } from '../constants.js';
 
-/**
- * UIManager handles the HUD, character select screen, and game messages.
- */
 export class UIManager {
   constructor() {
     this.selectScreen = document.getElementById('select-screen');
@@ -15,11 +12,21 @@ export class UIManager {
     this.gingaBar = document.getElementById('ginga-bar');
     this.hudPlayerIcon = document.getElementById('hud-player-icon');
     this.hudPlayerName = document.getElementById('hud-player-name');
+    this.hudPlayerSpecial = document.getElementById('hud-player-special');
+    this.specialHint = document.getElementById('special-hint');
     this.goalSplash = document.getElementById('goal-splash');
     this.gameMessage = document.getElementById('game-message');
+    this.possessionChip = document.getElementById('possession-chip');
+    this.possessionText = document.getElementById('possession-text');
+    this.shootFlash = document.getElementById('shoot-flash');
+    this.fxOverlay = document.getElementById('fx-overlay');
+    this.controlsHint = document.getElementById('controls-hint');
+    this.helpToggle = document.getElementById('help-toggle');
 
     this.selectedLegend = null;
     this.onStartGame = null;
+    this.hintTimer = null;
+    this.hintFaded = false;
 
     this._buildMuralWall();
     this._setupEvents();
@@ -41,18 +48,20 @@ export class UIManager {
         <span class="icon">${legend.icon}</span>
         <span class="name">${legend.name}</span>
         <span class="title">${legend.title}</span>
+        <span class="special-name">${legend.specialName}</span>
+        <span class="special-desc">${legend.specialDesc}</span>
         <div class="stats">
-          ${stats.map(s => `
+          ${stats.map((s) => `
             <div class="stat-bar">
               <span>${s.label}</span>
-              <div class="bar"><div class="fill" style="height: ${s.value}%"></div></div>
+              <div class="bar"><div class="fill" style="height: ${this._statHeight(s.value)}%"></div></div>
             </div>
           `).join('')}
         </div>
       `;
 
       card.addEventListener('click', () => {
-        document.querySelectorAll('.legend-card').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.legend-card').forEach((c) => c.classList.remove('active'));
         card.classList.add('active');
         this.selectedLegend = legend;
       });
@@ -60,8 +69,11 @@ export class UIManager {
       this.muralWall.appendChild(card);
     }
 
-    // Select first by default
     this.muralWall.children[0].click();
+  }
+
+  _statHeight(value) {
+    return Math.round(Math.max(12, ((value - 70) / 30) * 100));
   }
 
   _setupEvents() {
@@ -71,9 +83,37 @@ export class UIManager {
         this.hud.classList.add('visible');
         this.hudPlayerIcon.textContent = this.selectedLegend.icon;
         this.hudPlayerName.textContent = this.selectedLegend.name;
+        this.hudPlayerSpecial.textContent = this.selectedLegend.specialName;
+        this.specialHint.textContent = `[SHIFT] ${this.selectedLegend.specialName.toUpperCase()}`;
+        if (!document.body.classList.contains('touch-ui')) {
+          this._armControlsHint();
+        }
         this.onStartGame(this.selectedLegend);
       }
     });
+
+    if (this.helpToggle && this.controlsHint) {
+      this.helpToggle.addEventListener('click', () => {
+        this.hintFaded = !this.controlsHint.classList.contains('faded');
+        this.controlsHint.classList.toggle('faded');
+        clearTimeout(this.hintTimer);
+      });
+    }
+  }
+
+  _armControlsHint() {
+    if (!this.controlsHint) return;
+    this.hintFaded = false;
+    this.controlsHint.classList.remove('faded');
+    clearTimeout(this.hintTimer);
+    this.hintTimer = setTimeout(() => this.fadeControlsHint(), 8000);
+  }
+
+  fadeControlsHint() {
+    if (!this.controlsHint || this.hintFaded) return;
+    this.hintFaded = true;
+    this.controlsHint.classList.add('faded');
+    clearTimeout(this.hintTimer);
   }
 
   updateScore(home, away) {
@@ -90,11 +130,44 @@ export class UIManager {
   updateGinga(value) {
     const pct = Math.min(100, (value / MAX_GINGA) * 100);
     this.gingaBar.style.width = pct + '%';
-    if (pct >= 100) {
-      this.gingaBar.classList.add('full');
-    } else {
-      this.gingaBar.classList.remove('full');
+    if (pct >= 100) this.gingaBar.classList.add('full');
+    else this.gingaBar.classList.remove('full');
+    document.getElementById('touch-special')?.classList.toggle('ready', pct >= 80);
+  }
+
+  updatePossession(player) {
+    this.possessionChip.classList.remove('you', 'rival');
+    if (!player) {
+      this.possessionText.textContent = 'LOOSE BALL';
+      return;
     }
+    const you = player.team === TEAM_HOME;
+    this.possessionChip.classList.add(you ? 'you' : 'rival');
+    const who = you ? (player.isHuman ? 'YOU' : 'TEAMMATE') : 'RIVAL';
+    this.possessionText.textContent = `${who} · ${player.legend.name}`;
+  }
+
+  flashShoot() {
+    this._bumpClass(this.shootFlash, 'flash');
+  }
+
+  flashTurnover(isHome) {
+    if (!this.fxOverlay) return;
+    this.fxOverlay.classList.remove('turnover-home', 'turnover-away', 'desat');
+    void this.fxOverlay.offsetWidth;
+    this.fxOverlay.classList.add(isHome ? 'turnover-home' : 'turnover-away');
+  }
+
+  flashDesat() {
+    if (!this.fxOverlay) return;
+    this._bumpClass(this.fxOverlay, 'desat');
+  }
+
+  _bumpClass(el, className) {
+    if (!el) return;
+    el.classList.remove(className);
+    void el.offsetWidth;
+    el.classList.add(className);
   }
 
   showGoal() {
@@ -114,5 +187,10 @@ export class UIManager {
     setTimeout(() => {
       this.gameMessage.classList.remove('show');
     }, duration);
+  }
+
+  showMenu() {
+    this.selectScreen.classList.remove('hidden');
+    this.hud.classList.remove('visible');
   }
 }

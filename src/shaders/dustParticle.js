@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 export class DustParticleSystem {
-  constructor(scene, count = 200) {
+  constructor(scene, count = 200, color = 0xddbb88) {
     this.scene = scene;
     this.count = count;
     this.particles = [];
@@ -27,7 +27,7 @@ export class DustParticleSystem {
 
     const mat = new THREE.ShaderMaterial({
       uniforms: {
-        uColor: { value: new THREE.Color(0xddbb88) },
+        uColor: { value: new THREE.Color(color) },
       },
       vertexShader: /* glsl */ `
         attribute float size;
@@ -62,6 +62,14 @@ export class DustParticleSystem {
   }
 
   emit(x, y, z, count = 5) {
+    this._spawn(x, y, z, count, 3, 2, 0.6);
+  }
+
+  emitBurst(x, y, z, count = 16) {
+    this._spawn(x, y, z, count, 8, 5, 0.95);
+  }
+
+  _spawn(x, y, z, count, spread, lift, alpha) {
     for (let i = 0; i < count; i++) {
       const idx = this.poolIndex % this.count;
       this.poolIndex++;
@@ -69,14 +77,14 @@ export class DustParticleSystem {
       const p = this.particles[idx];
       p.active = true;
       p.life = 0;
-      p.maxLife = 0.4 + Math.random() * 0.6;
-      p.vx = (Math.random() - 0.5) * 3;
-      p.vy = 1 + Math.random() * 2;
-      p.vz = (Math.random() - 0.5) * 3;
+      p.maxLife = 0.35 + Math.random() * 0.55;
+      p.vx = (Math.random() - 0.5) * spread;
+      p.vy = lift * 0.4 + Math.random() * lift;
+      p.vz = (Math.random() - 0.5) * spread;
 
-      this.posAttr.setXYZ(idx, x + (Math.random() - 0.5), y + 0.1, z + (Math.random() - 0.5));
-      this.sizeAttr.setX(idx, 2 + Math.random() * 3);
-      this.alphaAttr.setX(idx, 0.6);
+      this.posAttr.setXYZ(idx, x + (Math.random() - 0.5) * 0.4, y + 0.1, z + (Math.random() - 0.5) * 0.4);
+      this.sizeAttr.setX(idx, 1.6 + Math.random() * 3.2);
+      this.alphaAttr.setX(idx, alpha);
     }
     this.posAttr.needsUpdate = true;
     this.sizeAttr.needsUpdate = true;
