@@ -175,7 +175,9 @@ export class PhysicsWorld {
       linearDamping: 0.5,
       angularDamping: 0.95,
       fixedRotation: true,
+      allowSleep: false,
     });
+    if (typeof body.wakeUp === 'function') body.wakeUp();
     this.world.addBody(body);
     this.playerBodies.push(body);
     return body;

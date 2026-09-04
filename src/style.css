@@ -527,6 +527,21 @@ html, body {
   opacity: 0.2;
 }
 
+#input-debug {
+  position: absolute;
+  left: calc(12px + env(safe-area-inset-left, 0px));
+  bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+  z-index: 6;
+  margin: 0;
+  padding: 4px 8px;
+  font: 10px/1.35 ui-monospace, monospace;
+  color: #ffcc00;
+  background: rgba(0, 0, 0, 0.62);
+  border: 1px solid #ffcc00;
+  pointer-events: none;
+  white-space: pre;
+}
+
 .help-toggle {
   position: absolute;
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
