@@ -167,21 +167,3 @@ export function createJerseyMark(letter, ink = '#111111') {
   return texture;
 }
 
-export function createYouSpriteTexture() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 128;
-  canvas.height = 48;
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 128, 48);
-  ctx.font = '700 28px "Permanent Marker", cursive';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.strokeStyle = '#7a2a00';
-  ctx.lineWidth = 6;
-  ctx.strokeText('YOU', 64, 26);
-  ctx.fillStyle = '#ffcc00';
-  ctx.fillText('YOU', 64, 26);
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.colorSpace = THREE.SRGBColorSpace;
-  return texture;
-}

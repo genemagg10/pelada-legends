@@ -72,6 +72,7 @@ function initEngine() {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
+  // Title-UI warmth, not cool blue: #1a0a00 / #332211, ambient sodium not 0x334466.
   scene.background = new THREE.Color(COLOR_NIGHT);
   scene.fog = new THREE.FogExp2(COLOR_FOG, 0.008);
 
@@ -289,6 +290,7 @@ function processInput(dt) {
   humanPlayer.move(moveDir, isMoving);
 
   if (isMoving && moveDir.lengthSq() > 0.1) {
+    uiManager.fadeControlsHint();
     dustTimer += dt;
     if (dustTimer > 0.1) {
       dustTimer = 0;

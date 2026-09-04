@@ -26,6 +26,7 @@ export class UIManager {
     this.selectedLegend = null;
     this.onStartGame = null;
     this.hintTimer = null;
+    this.hintFaded = false;
 
     this._buildMuralWall();
     this._setupEvents();
@@ -91,18 +92,26 @@ export class UIManager {
 
     if (this.helpToggle && this.controlsHint) {
       this.helpToggle.addEventListener('click', () => {
+        this.hintFaded = !this.controlsHint.classList.contains('faded');
         this.controlsHint.classList.toggle('faded');
+        clearTimeout(this.hintTimer);
       });
     }
   }
 
   _armControlsHint() {
     if (!this.controlsHint) return;
+    this.hintFaded = false;
     this.controlsHint.classList.remove('faded');
     clearTimeout(this.hintTimer);
-    this.hintTimer = setTimeout(() => {
-      this.controlsHint.classList.add('faded');
-    }, 8000);
+    this.hintTimer = setTimeout(() => this.fadeControlsHint(), 8000);
+  }
+
+  fadeControlsHint() {
+    if (!this.controlsHint || this.hintFaded) return;
+    this.hintFaded = true;
+    this.controlsHint.classList.add('faded');
+    clearTimeout(this.hintTimer);
   }
 
   updateScore(home, away) {

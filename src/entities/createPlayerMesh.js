@@ -4,7 +4,7 @@ import {
   COLOR_GOLD, PLAYER_HEIGHT,
 } from '../constants.js';
 import { setShadow } from '../utils/shadows.js';
-import { createJerseyMark, createYouSpriteTexture } from '../utils/textures.js';
+import { createJerseyMark } from '../utils/textures.js';
 
 /**
  * Low-poly pawn: head / torso / legs / feet. ~1.8u.
@@ -103,8 +103,8 @@ export function createPlayerMesh({ team, legend, isHuman }) {
   group.add(possessionRing);
 
   let humanMarker = null;
-  let youSprite = null;
   if (isHuman) {
+    // Gold floor ring only — HUD already labels YOU. No head chevron / sprite.
     humanMarker = new THREE.Mesh(
       new THREE.RingGeometry(0.68, 0.92, 32),
       new THREE.MeshStandardMaterial({
@@ -121,17 +121,8 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     humanMarker.rotation.x = -Math.PI / 2;
     humanMarker.position.y = 0.04;
     group.add(humanMarker);
-
-    youSprite = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: createYouSpriteTexture(),
-      transparent: true,
-      depthTest: false,
-    }));
-    youSprite.scale.set(1.05, 0.38, 1);
-    youSprite.position.y = 2.05;
-    group.add(youSprite);
   }
 
   group.userData.height = PLAYER_HEIGHT;
-  return { group, glowRing, possessionRing, humanMarker, youSprite };
+  return { group, glowRing, possessionRing, humanMarker };
 }

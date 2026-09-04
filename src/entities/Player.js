@@ -18,7 +18,6 @@ export class Player {
     this.glowRing = visuals.glowRing;
     this.possessionRing = visuals.possessionRing;
     this.humanMarker = visuals.humanMarker;
-    this.youSprite = visuals.youSprite;
     scene.add(this.mesh);
 
     this.hasBall = false;
@@ -58,9 +57,6 @@ export class Player {
     if (this.humanMarker) {
       this.humanMarker.material.opacity = 0.75 + Math.sin(t * 3) * 0.2;
       this.humanMarker.scale.setScalar(1 + Math.sin(t * 2.4) * 0.06);
-    }
-    if (this.youSprite) {
-      this.youSprite.position.y = 2.05 + Math.sin(t * 2) * 0.06;
     }
 
     if (this.specialTimer > 0) {
