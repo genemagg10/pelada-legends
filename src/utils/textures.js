@@ -126,8 +126,8 @@ export function createSoccerTexture(size = 256) {
   ctx.fillStyle = '#f0ebe0';
   ctx.fillRect(0, 0, size, size);
 
-  ctx.strokeStyle = '#222';
-  ctx.lineWidth = 4;
+  ctx.strokeStyle = '#5a4030';
+  ctx.lineWidth = 3;
   const centers = [
     [128, 40], [40, 110], [216, 110], [70, 210], [186, 210],
     [128, 128], [20, 20], [236, 20], [20, 236], [236, 236],
@@ -143,12 +143,12 @@ export function createSoccerTexture(size = 256) {
       else ctx.lineTo(x, y);
     }
     ctx.closePath();
-    ctx.fillStyle = '#161616';
+    ctx.fillStyle = '#3a2a18';
     ctx.fill();
     ctx.stroke();
   }
 
-  ctx.strokeStyle = '#2a2a2a';
+  ctx.strokeStyle = '#5a4030';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(128, 62);

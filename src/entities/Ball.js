@@ -12,10 +12,10 @@ export class Ball {
     const mat = new THREE.MeshStandardMaterial({
       color: COLOR_BALL,
       map: createSoccerTexture(),
-      roughness: 0.46,
+      roughness: 0.44,
       metalness: 0.03,
-      emissive: 0x33220c,
-      emissiveIntensity: 0.24,
+      emissive: 0x3a2810,
+      emissiveIntensity: 0.28,
     });
     this.mesh = new THREE.Mesh(geo, mat);
     setShadow(this.mesh, true, false);
@@ -73,8 +73,8 @@ export class Ball {
       this.mesh.material.emissiveIntensity = 0.68;
       this.trailColor = TEAM_AWAY_COLOR;
     } else {
-      this.mesh.material.emissive.setHex(0x33220c);
-      this.mesh.material.emissiveIntensity = 0.24;
+      this.mesh.material.emissive.setHex(0x3a2810);
+      this.mesh.material.emissiveIntensity = 0.28;
       this.trailColor = 0xffe08a;
     }
   }

@@ -69,22 +69,22 @@ function initEngine() {
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  // Dieter: 1.15–1.25 — lift mids, do not blow bloom.
-  renderer.toneMappingExposure = 1.22;
+  // Dieter band 1.15–1.25. Top of the range so phone mids still read at night.
+  renderer.toneMappingExposure = 1.25;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
   // Tokens: gold #ffcc00 · ember #ff6600 · night #1a0a00 · fog #332211.
   // Not cool blue, not FIFA day, not white stadium.
   scene.background = new THREE.Color(COLOR_NIGHT);
-  scene.fog = new THREE.FogExp2(COLOR_FOG, 0.0056);
+  scene.fog = new THREE.FogExp2(COLOR_FOG, 0.0052);
 
   camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
 
   scene.add(new THREE.AmbientLight(0x4a2a14, 0.40));
-  scene.add(new THREE.HemisphereLight(COLOR_AMBER, 0x3d2210, 0.50));
+  scene.add(new THREE.HemisphereLight(COLOR_AMBER, 0x3d2210, 0.54));
 
-  // Main was 0.72 gold; Dieter cited ~0.62 +25–40%. 0.98 is +36% from 0.72, #ffb066.
+  // Key: sodium #ffb066, one shadow caster. +36% vs the old 0.72 gold sun.
   const sun = new THREE.DirectionalLight(0xffb066, 0.98);
   sun.position.set(-28, 22, 10);
   setShadow(sun, true, false);
@@ -96,9 +96,11 @@ function initEngine() {
   sun.shadow.camera.near = 1;
   sun.shadow.camera.far = 120;
   sun.shadow.bias = -0.001;
+  sun.shadow.normalBias = 0.03;
+  sun.shadow.radius = 2.5;
   scene.add(sun);
 
-  const fill = new THREE.DirectionalLight(COLOR_FILL, 0.40);
+  const fill = new THREE.DirectionalLight(COLOR_FILL, 0.46);
   fill.position.set(22, 14, -18);
   fill.castShadow = false;
   scene.add(fill);
@@ -107,7 +109,7 @@ function initEngine() {
   composer.addPass(new RenderPass(scene, camera));
   composer.addPass(new UnrealBloomPass(
     new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.28, 0.45, 0.85
+    0.26, 0.45, 0.86
   ));
   composer.addPass(new OutputPass());
 

@@ -53,8 +53,8 @@ export class CourtBuilder {
       new THREE.MeshStandardMaterial({
         color: COLOR_CONCRETE,
         map: createNoiseMap(4, 6),
-        roughness: 0.92,
-        metalness: 0.02,
+        roughness: 0.88,
+        metalness: 0.03,
       })
     );
     court.rotation.x = -Math.PI / 2;
@@ -171,7 +171,7 @@ export class CourtBuilder {
     const goldEdge = new THREE.MeshStandardMaterial({
       color: COLOR_GOLD,
       emissive: COLOR_GOLD,
-      emissiveIntensity: 0.22,
+      emissiveIntensity: 0.34,
       roughness: 0.4,
     });
 
@@ -497,7 +497,8 @@ export class CourtBuilder {
       housing.position.set(x, 5.5, z);
       this.scene.add(housing);
 
-      const light = new THREE.PointLight(COLOR_AMBER, 1.2, 26, 1.6);
+      const light = new THREE.PointLight(COLOR_AMBER, 1.05, 24, 1.7);
+      light.castShadow = false;
       light.position.set(x, 5.35, z);
       this.scene.add(light);
     }
@@ -527,5 +528,18 @@ export class CourtBuilder {
     );
     moon.position.set(-50, 42, -28);
     this.scene.add(moon);
+
+    const haze = new THREE.Mesh(
+      new THREE.CylinderGeometry(88, 102, 22, 28, 1, true),
+      new THREE.MeshBasicMaterial({
+        color: 0x4a220c,
+        transparent: true,
+        opacity: 0.28,
+        side: THREE.BackSide,
+        depthWrite: false,
+      })
+    );
+    haze.position.y = 8;
+    this.scene.add(haze);
   }
 }
