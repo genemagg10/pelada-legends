@@ -3,11 +3,12 @@ import {
   COURT_WIDTH, COURT_LENGTH, WALL_HEIGHT, WALL_THICKNESS,
   GOAL_WIDTH, GOAL_HEIGHT, GOAL_DEPTH,
   TEAM_HOME_COLOR, TEAM_AWAY_COLOR,
+  COLOR_CONCRETE, COLOR_DIRT, COLOR_LINE, COLOR_CARD, COLOR_CARD_DARK,
+  COLOR_GOLD, COLOR_EMBER, COLOR_AMBER, COLOR_WINDOW_A, COLOR_WINDOW_B,
 } from '../constants.js';
 import { setShadow } from '../utils/shadows.js';
 import {
   createConcreteTexture,
-  createBrickTexture,
   createGraffitiTexture,
 } from '../utils/textures.js';
 
@@ -50,7 +51,7 @@ export class CourtBuilder {
     const court = new THREE.Mesh(
       new THREE.PlaneGeometry(COURT_WIDTH + 2, COURT_LENGTH + 2),
       new THREE.MeshStandardMaterial({
-        color: 0xddc8a8,
+        color: COLOR_CONCRETE,
         map: concrete,
         roughness: 0.92,
         metalness: 0.02,
@@ -63,7 +64,7 @@ export class CourtBuilder {
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(220, 220),
       new THREE.MeshStandardMaterial({
-        color: 0x3a2a22,
+        color: COLOR_DIRT,
         roughness: 1,
       })
     );
@@ -91,17 +92,17 @@ export class CourtBuilder {
 
   _createCourtMarkings() {
     const lineMat = new THREE.MeshBasicMaterial({
-      color: 0xfff4d0,
+      color: COLOR_LINE,
       transparent: true,
-      opacity: 0.78,
+      opacity: 0.85,
     });
 
-    const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.18), lineMat);
+    const centerLine = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.26), lineMat);
     centerLine.rotation.x = -Math.PI / 2;
     centerLine.position.y = 0.015;
     this.scene.add(centerLine);
 
-    const circle = new THREE.Mesh(new THREE.RingGeometry(4.7, 5.05, 48), lineMat);
+    const circle = new THREE.Mesh(new THREE.RingGeometry(4.62, 5.12, 48), lineMat);
     circle.rotation.x = -Math.PI / 2;
     circle.position.y = 0.015;
     this.scene.add(circle);
@@ -115,14 +116,14 @@ export class CourtBuilder {
     const hl = COURT_LENGTH / 2;
 
     for (const x of [-hw + 0.5, hw - 0.5]) {
-      const line = new THREE.Mesh(new THREE.PlaneGeometry(0.16, COURT_LENGTH - 1), lineMat);
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(0.22, COURT_LENGTH - 1), lineMat);
       line.rotation.x = -Math.PI / 2;
       line.position.set(x, 0.015, 0);
       this.scene.add(line);
     }
 
     for (const z of [-hl + 0.5, hl - 0.5]) {
-      const line = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.16), lineMat);
+      const line = new THREE.Mesh(new THREE.PlaneGeometry(COURT_WIDTH - 1, 0.22), lineMat);
       line.rotation.x = -Math.PI / 2;
       line.position.set(0, 0.015, z);
       this.scene.add(line);
@@ -134,12 +135,12 @@ export class CourtBuilder {
       const penZ = zSign * (hl - penD / 2);
       const penOutline = new THREE.Group();
 
-      const front = new THREE.Mesh(new THREE.PlaneGeometry(penW, 0.14), lineMat);
+      const front = new THREE.Mesh(new THREE.PlaneGeometry(penW, 0.2), lineMat);
       front.position.set(0, 0, -zSign * penD / 2);
       penOutline.add(front);
 
       for (const xSign of [-1, 1]) {
-        const side = new THREE.Mesh(new THREE.PlaneGeometry(0.14, penD), lineMat);
+        const side = new THREE.Mesh(new THREE.PlaneGeometry(0.2, penD), lineMat);
         side.position.set(xSign * penW / 2, 0, 0);
         penOutline.add(side);
       }
@@ -155,26 +156,35 @@ export class CourtBuilder {
     const hl = COURT_LENGTH / 2;
     const hh = WALL_HEIGHT / 2;
     const goalHW = GOAL_WIDTH / 2;
-    const brickMap = createBrickTexture();
-
-    const brickMat = new THREE.MeshStandardMaterial({
-      color: 0xbb6655,
-      map: brickMap,
-      roughness: 0.88,
+    const boardMat = new THREE.MeshStandardMaterial({
+      color: COLOR_CARD,
+      roughness: 0.9,
       metalness: 0.02,
+    });
+    const boardDark = new THREE.MeshStandardMaterial({
+      color: COLOR_CARD_DARK,
+      roughness: 0.92,
+    });
+    const goldEdge = new THREE.MeshStandardMaterial({
+      color: COLOR_GOLD,
+      emissive: COLOR_GOLD,
+      emissiveIntensity: 0.22,
+      roughness: 0.4,
     });
 
     const fenceMat = new THREE.MeshStandardMaterial({
-      color: 0x9aa0a8,
-      roughness: 0.4,
-      metalness: 0.65,
+      color: 0x6a4a30,
+      roughness: 0.45,
+      metalness: 0.35,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.5,
       wireframe: true,
     });
 
-    this._addWallMesh(-hw - WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, brickMat);
-    this._addWallMesh(hw + WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, brickMat);
+    this._addWallMesh(-hw - WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, boardMat);
+    this._addWallMesh(hw + WALL_THICKNESS / 2, hh, 0, WALL_THICKNESS, WALL_HEIGHT, COURT_LENGTH, boardDark);
+    this._addWallMesh(-hw - WALL_THICKNESS / 2, WALL_HEIGHT + 0.04, 0, WALL_THICKNESS + 0.04, 0.08, COURT_LENGTH, goldEdge);
+    this._addWallMesh(hw + WALL_THICKNESS / 2, WALL_HEIGHT + 0.04, 0, WALL_THICKNESS + 0.04, 0.08, COURT_LENGTH, goldEdge);
 
     const sideSegW = (COURT_WIDTH - GOAL_WIDTH) / 2;
     this._addWallMesh(-hw / 2 - goalHW / 2, hh, -hl - WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
@@ -182,13 +192,12 @@ export class CourtBuilder {
     this._addWallMesh(-hw / 2 - goalHW / 2, hh, hl + WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
     this._addWallMesh(hw / 2 + goalHW / 2, hh, hl + WALL_THICKNESS / 2, sideSegW, WALL_HEIGHT, WALL_THICKNESS, fenceMat);
 
-    this._addWallMesh(0, GOAL_HEIGHT + 0.25, -hl - WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
-    this._addWallMesh(0, GOAL_HEIGHT + 0.25, hl + WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, brickMat);
+    this._addWallMesh(0, GOAL_HEIGHT + 0.25, -hl - WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, boardMat);
+    this._addWallMesh(0, GOAL_HEIGHT + 0.25, hl + WALL_THICKNESS / 2, GOAL_WIDTH, 0.5, WALL_THICKNESS, boardMat);
 
-    this._addGraffiti(-hw + 0.08, hh, -10, 11, WALL_HEIGHT - 0.4, 'PELADA', '#ffcc00', Math.PI / 2);
-    this._addGraffiti(-hw + 0.08, hh, 8, 10, WALL_HEIGHT - 0.4, 'GINGA', '#39e07a', Math.PI / 2);
-    this._addGraffiti(hw - 0.08, hh, -6, 12, WALL_HEIGHT - 0.4, 'RUA', '#ff4455', -Math.PI / 2);
-    this._addGraffiti(hw - 0.08, hh, 11, 9, WALL_HEIGHT - 0.4, 'GOOL', '#4c9fff', -Math.PI / 2);
+    this._addGraffiti(-hw + 0.08, hh, -8, 12, WALL_HEIGHT - 0.35, 'PELADA', '#ffcc00', Math.PI / 2);
+    this._addGraffiti(-hw + 0.08, hh, 10, 10, WALL_HEIGHT - 0.35, 'GINGA', '#ff6600', Math.PI / 2);
+    this._addGraffiti(hw - 0.08, hh, 0, 11, WALL_HEIGHT - 0.35, 'GOOL', '#ff9944', -Math.PI / 2);
   }
 
   _addWallMesh(x, y, z, w, h, d, mat) {
@@ -309,7 +318,7 @@ export class CourtBuilder {
   }
 
   _createBuildings() {
-    const buildingColors = [0x3a2a28, 0x4a3328, 0x2d2430, 0x403028, 0x2a2220, 0x382820];
+    const buildingColors = [0x3d1f00, 0x2a160c, 0x4a2814, 0x221100, 0x3a2218, 0x2c1810];
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
     const buildingGeo = new THREE.BoxGeometry(1, 1, 1);
@@ -368,9 +377,9 @@ export class CourtBuilder {
         const win = new THREE.Mesh(
           new THREE.PlaneGeometry(0.75, 0.95),
           new THREE.MeshStandardMaterial({
-            color: lit ? 0xffe0a8 : 0x22180e,
-            emissive: lit ? 0xffc878 : 0x000000,
-            emissiveIntensity: lit ? 0.55 : 0,
+            color: lit ? COLOR_WINDOW_A : 0x221100,
+            emissive: lit ? (this._rand() > 0.5 ? COLOR_WINDOW_A : COLOR_WINDOW_B) : 0x000000,
+            emissiveIntensity: lit ? 0.7 : 0,
             roughness: 0.35,
           })
         );
@@ -390,7 +399,7 @@ export class CourtBuilder {
   }
 
   _createSpectators() {
-    const colors = [0xff4444, 0x44ff44, 0xffff44, 0xff8844, 0x4488ff, 0xff44ff];
+    const colors = [COLOR_GOLD, COLOR_EMBER, COLOR_AMBER, TEAM_AWAY_COLOR, 0xffee88];
     const specGeo = new THREE.PlaneGeometry(0.55, 1.1);
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
@@ -419,33 +428,31 @@ export class CourtBuilder {
     const hw = COURT_WIDTH / 2;
     const hl = COURT_LENGTH / 2;
     const lampPositions = [
-      [-hw - 3, -hl / 2],
-      [-hw - 3, 0],
-      [-hw - 3, hl / 2],
-      [hw + 3, -hl / 2],
-      [hw + 3, 0],
-      [hw + 3, hl / 2],
+      [-hw - 2.4, -hl + 4],
+      [-hw - 2.4, hl - 4],
+      [hw + 2.4, -hl + 4],
+      [hw + 2.4, hl - 4],
     ];
 
-    const poleMat = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.7, roughness: 0.3 });
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x2a1a10, metalness: 0.55, roughness: 0.4 });
     const housingMat = new THREE.MeshStandardMaterial({
-      color: 0xffe0aa,
-      emissive: 0xffc878,
-      emissiveIntensity: 0.95,
+      color: COLOR_AMBER,
+      emissive: COLOR_AMBER,
+      emissiveIntensity: 0.9,
     });
 
     for (const [x, z] of lampPositions) {
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 6, 6), poleMat);
-      pole.position.set(x, 3, z);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 5.4, 6), poleMat);
+      pole.position.set(x, 2.7, z);
       setShadow(pole, true, false);
       this.scene.add(pole);
 
-      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.18, 0.7), housingMat);
-      housing.position.set(x, 6.1, z);
+      const housing = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.16, 0.55), housingMat);
+      housing.position.set(x, 5.5, z);
       this.scene.add(housing);
 
-      const light = new THREE.PointLight(0xffc878, 1.15, 34, 1.6);
-      light.position.set(x, 6, z);
+      const light = new THREE.PointLight(COLOR_AMBER, 1.05, 22, 1.8);
+      light.position.set(x, 5.35, z);
       this.scene.add(light);
     }
   }
@@ -470,7 +477,7 @@ export class CourtBuilder {
 
     const moon = new THREE.Mesh(
       new THREE.SphereGeometry(3.2, 16, 16),
-      new THREE.MeshBasicMaterial({ color: 0xdde6ff })
+      new THREE.MeshBasicMaterial({ color: 0xffcc88 })
     );
     moon.position.set(-50, 42, -28);
     this.scene.add(moon);

@@ -60,7 +60,7 @@ export class Player {
       this.humanMarker.scale.setScalar(1 + Math.sin(t * 2.4) * 0.06);
     }
     if (this.youSprite) {
-      this.youSprite.position.y = 2.22 + Math.sin(t * 2) * 0.06;
+      this.youSprite.position.y = 2.05 + Math.sin(t * 2) * 0.06;
     }
 
     if (this.specialTimer > 0) {

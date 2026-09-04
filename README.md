@@ -34,7 +34,7 @@ Push to `main` (or run the workflow manually) to publish.
 
 ## Play notes
 
-**YOU** wear gold / yellow. **RIVAL** wear red. Capsule silhouettes + jersey stripe/number. Your player has a gold ring and a `YOU` tag.
+**YOU** wear gold. **RIVAL** wear deep red. Low-poly pawns (head / torso / legs / feet) with a flat gold ground ring — no green cone. Night rooftop: warm sodium, card-brown boards, graffiti gold/ember.
 
 Shoots squash-stretch the ball, leave a short trail, stamp a ground disc, and punch FOV for 80–120ms. The carrier gets a soft team-colored ground ring; the ball tints to that team. Specials fire a colored burst + shockwave and a 1–2 frame freeze/desat.
 

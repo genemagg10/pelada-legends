@@ -22,6 +22,7 @@ import {
   LEGENDS, TEAM_HOME, TEAM_AWAY, COURT_LENGTH,
   MAX_GINGA, GINGA_CHARGE_RATE, GINGA_CHARGE_ON_DRIBBLE, GINGA_COST,
   MATCH_DURATION, SHOOT_POWER, BALL_POSSESSION_DIST,
+  COLOR_NIGHT, COLOR_FOG, COLOR_GOLD, COLOR_AMBER,
 } from './constants.js';
 
 let renderer, scene, camera, composer;
@@ -71,30 +72,26 @@ function initEngine() {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0a1220);
-  scene.fog = new THREE.FogExp2(0x10182a, 0.011);
+  scene.background = new THREE.Color(COLOR_NIGHT);
+  scene.fog = new THREE.FogExp2(COLOR_FOG, 0.008);
 
   camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 300);
 
-  scene.add(new THREE.AmbientLight(0x334466, 0.32));
-  scene.add(new THREE.HemisphereLight(0x4a68a0, 0x2a160c, 0.42));
+  scene.add(new THREE.AmbientLight(0x4a2a14, 0.28));
+  scene.add(new THREE.HemisphereLight(COLOR_AMBER, COLOR_NIGHT, 0.38));
 
-  const moonLight = new THREE.DirectionalLight(0x8899cc, 0.28);
-  moonLight.position.set(40, 50, -18);
-  scene.add(moonLight);
-
-  const lampKey = new THREE.DirectionalLight(0xffb066, 0.85);
-  lampKey.position.set(-22, 20, 8);
-  setShadow(lampKey, true, false);
-  lampKey.shadow.mapSize.set(2048, 2048);
-  lampKey.shadow.camera.left = -50;
-  lampKey.shadow.camera.right = 50;
-  lampKey.shadow.camera.top = 50;
-  lampKey.shadow.camera.bottom = -50;
-  lampKey.shadow.camera.near = 1;
-  lampKey.shadow.camera.far = 120;
-  lampKey.shadow.bias = -0.001;
-  scene.add(lampKey);
+  const sun = new THREE.DirectionalLight(COLOR_GOLD, 0.72);
+  sun.position.set(-28, 22, 10);
+  setShadow(sun, true, false);
+  sun.shadow.mapSize.set(2048, 2048);
+  sun.shadow.camera.left = -50;
+  sun.shadow.camera.right = 50;
+  sun.shadow.camera.top = 50;
+  sun.shadow.camera.bottom = -50;
+  sun.shadow.camera.near = 1;
+  sun.shadow.camera.far = 120;
+  sun.shadow.bias = -0.001;
+  scene.add(sun);
 
   composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));

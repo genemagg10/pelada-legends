@@ -14,7 +14,7 @@ function hashColor(n) {
 
 export function createConcreteTexture(size = 512) {
   const { canvas, ctx } = makeCanvas(size);
-  ctx.fillStyle = '#8a7a68';
+  ctx.fillStyle = '#a89878';
   ctx.fillRect(0, 0, size, size);
 
   for (let i = 0; i < 1400; i++) {
@@ -113,7 +113,7 @@ export function createGraffitiTexture(label, accentHex, size = 256) {
 
 export function createSoccerTexture(size = 256) {
   const { canvas, ctx } = makeCanvas(size);
-  ctx.fillStyle = '#f3f3f3';
+  ctx.fillStyle = '#f0ebe0';
   ctx.fillRect(0, 0, size, size);
 
   ctx.strokeStyle = '#222';

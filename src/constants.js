@@ -34,8 +34,23 @@ export const BALL_POSSESSION_DIST = 1.8;
 // ── Teams ──
 export const TEAM_HOME = 0;
 export const TEAM_AWAY = 1;
-export const TEAM_HOME_COLOR = 0xffcc22;
-export const TEAM_AWAY_COLOR = 0xd41f32;
+export const TEAM_HOME_COLOR = 0xffcc00;
+export const TEAM_AWAY_COLOR = 0xcc2233;
+
+// ── Dieter visual tokens ──
+export const COLOR_GOLD = 0xffcc00;
+export const COLOR_EMBER = 0xff6600;
+export const COLOR_AMBER = 0xff9944;
+export const COLOR_NIGHT = 0x1a0a00;
+export const COLOR_CARD = 0x3d1f00;
+export const COLOR_CARD_DARK = 0x221100;
+export const COLOR_FOG = 0x332211;
+export const COLOR_CONCRETE = 0xa89878;
+export const COLOR_DIRT = 0x8a7058;
+export const COLOR_LINE = 0xe8e0d0;
+export const COLOR_WINDOW_A = 0xffcc66;
+export const COLOR_WINDOW_B = 0xff9944;
+export const COLOR_BALL = 0xf0ebe0;
 
 // ── Legend Roster ──
 export const LEGENDS = [

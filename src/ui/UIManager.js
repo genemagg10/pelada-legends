@@ -20,9 +20,12 @@ export class UIManager {
     this.possessionText = document.getElementById('possession-text');
     this.shootFlash = document.getElementById('shoot-flash');
     this.fxOverlay = document.getElementById('fx-overlay');
+    this.controlsHint = document.getElementById('controls-hint');
+    this.helpToggle = document.getElementById('help-toggle');
 
     this.selectedLegend = null;
     this.onStartGame = null;
+    this.hintTimer = null;
 
     this._buildMuralWall();
     this._setupEvents();
@@ -50,7 +53,7 @@ export class UIManager {
           ${stats.map((s) => `
             <div class="stat-bar">
               <span>${s.label}</span>
-              <div class="bar"><div class="fill" style="height: ${s.value}%"></div></div>
+              <div class="bar"><div class="fill" style="height: ${this._statHeight(s.value)}%"></div></div>
             </div>
           `).join('')}
         </div>
@@ -68,6 +71,10 @@ export class UIManager {
     this.muralWall.children[0].click();
   }
 
+  _statHeight(value) {
+    return Math.round(Math.max(12, ((value - 70) / 30) * 100));
+  }
+
   _setupEvents() {
     this.startBtn.addEventListener('click', () => {
       if (this.selectedLegend && this.onStartGame) {
@@ -77,9 +84,25 @@ export class UIManager {
         this.hudPlayerName.textContent = this.selectedLegend.name;
         this.hudPlayerSpecial.textContent = this.selectedLegend.specialName;
         this.specialHint.textContent = `[SHIFT] ${this.selectedLegend.specialName.toUpperCase()}`;
+        this._armControlsHint();
         this.onStartGame(this.selectedLegend);
       }
     });
+
+    if (this.helpToggle && this.controlsHint) {
+      this.helpToggle.addEventListener('click', () => {
+        this.controlsHint.classList.toggle('faded');
+      });
+    }
+  }
+
+  _armControlsHint() {
+    if (!this.controlsHint) return;
+    this.controlsHint.classList.remove('faded');
+    clearTimeout(this.hintTimer);
+    this.hintTimer = setTimeout(() => {
+      this.controlsHint.classList.add('faded');
+    }, 8000);
   }
 
   updateScore(home, away) {

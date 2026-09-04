@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BALL_RADIUS, TEAM_HOME, TEAM_AWAY, TEAM_HOME_COLOR, TEAM_AWAY_COLOR } from '../constants.js';
+import { BALL_RADIUS, TEAM_HOME, TEAM_AWAY, TEAM_HOME_COLOR, TEAM_AWAY_COLOR, COLOR_BALL } from '../constants.js';
 import { setShadow } from '../utils/shadows.js';
 import { createSoccerTexture } from '../utils/textures.js';
 
@@ -10,11 +10,12 @@ export class Ball {
 
     const geo = new THREE.IcosahedronGeometry(BALL_RADIUS, 1);
     const mat = new THREE.MeshStandardMaterial({
+      color: COLOR_BALL,
       map: createSoccerTexture(),
-      roughness: 0.35,
-      metalness: 0.05,
-      emissive: 0x332810,
-      emissiveIntensity: 0.4,
+      roughness: 0.38,
+      metalness: 0.04,
+      emissive: 0x221808,
+      emissiveIntensity: 0.22,
     });
     this.mesh = new THREE.Mesh(geo, mat);
     setShadow(this.mesh, true, false);
@@ -68,8 +69,8 @@ export class Ball {
       this.mesh.material.emissiveIntensity = 0.68;
       this.trailColor = TEAM_AWAY_COLOR;
     } else {
-      this.mesh.material.emissive.setHex(0x332810);
-      this.mesh.material.emissiveIntensity = 0.38;
+      this.mesh.material.emissive.setHex(0x221808);
+      this.mesh.material.emissiveIntensity = 0.22;
       this.trailColor = 0xffe08a;
     }
   }
