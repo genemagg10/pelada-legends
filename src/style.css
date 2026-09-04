@@ -788,16 +788,6 @@ body.touch-ui #hud.visible #touch-controls:not([hidden]) {
   gap: 2px;
 }
 
-.touch-special span {
-  font-size: 10px;
-  letter-spacing: 0.08em;
-  max-width: 50px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: inherit;
-}
-
 .touch-special.ready {
   border-color: #ff6600;
   color: #ff9944;

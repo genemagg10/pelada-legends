@@ -85,8 +85,6 @@ export class UIManager {
         this.hudPlayerName.textContent = this.selectedLegend.name;
         this.hudPlayerSpecial.textContent = this.selectedLegend.specialName;
         this.specialHint.textContent = `[SHIFT] ${this.selectedLegend.specialName.toUpperCase()}`;
-        const specialName = document.getElementById('touch-special-name');
-        if (specialName) specialName.textContent = this.selectedLegend.specialName;
         if (!document.body.classList.contains('touch-ui')) {
           this._armControlsHint();
         }

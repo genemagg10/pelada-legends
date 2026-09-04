@@ -53,11 +53,6 @@ export class TouchControls {
     if (this.specialBtn) this.specialBtn.classList.toggle('ready', !!ready);
   }
 
-  setSpecialLabel(name) {
-    const sub = document.getElementById('touch-special-name');
-    if (sub) sub.textContent = name || 'SPECIAL';
-  }
-
   reset() {
     this.stickId = null;
     this.input.setTouchMove(0, 0);
