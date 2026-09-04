@@ -86,7 +86,7 @@ function initEngine() {
 
   // Key: sodium #ffb066, one shadow caster. +36% vs the old 0.72 gold sun.
   const sun = new THREE.DirectionalLight(0xffb066, 0.98);
-  sun.position.set(-28, 22, 10);
+  sun.position.set(-18, 34, 12);
   setShadow(sun, true, false);
   sun.shadow.mapSize.set(2048, 2048);
   sun.shadow.camera.left = -50;
@@ -100,8 +100,8 @@ function initEngine() {
   sun.shadow.radius = 2.5;
   scene.add(sun);
 
-  const fill = new THREE.DirectionalLight(COLOR_FILL, 0.46);
-  fill.position.set(22, 14, -18);
+  const fill = new THREE.DirectionalLight(COLOR_FILL, 0.50);
+  fill.position.set(24, 18, -16);
   fill.castShadow = false;
   scene.add(fill);
 

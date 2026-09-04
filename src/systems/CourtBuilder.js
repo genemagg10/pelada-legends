@@ -355,7 +355,7 @@ export class CourtBuilder {
       const mesh = new THREE.Mesh(buildingGeo, buildingMats[b.colorIdx]);
       mesh.scale.set(b.w, b.h, b.d);
       mesh.position.set(b.x, b.h / 2, b.z);
-      setShadow(mesh, true, true);
+      setShadow(mesh, false, true);
       this.scene.add(mesh);
       this._addWindows(b);
 
