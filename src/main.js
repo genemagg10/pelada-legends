@@ -16,6 +16,7 @@ import { Player } from './entities/Player.js';
 import { UIManager } from './ui/UIManager.js';
 import { GhostTrailEffect } from './shaders/ghostTrail.js';
 import { DustParticleSystem } from './shaders/dustParticle.js';
+import { VfxManager } from './systems/VfxManager.js';
 import { setShadow } from './utils/shadows.js';
 import {
   LEGENDS, TEAM_HOME, TEAM_AWAY, COURT_LENGTH,
@@ -25,8 +26,10 @@ import {
 
 let renderer, scene, camera, composer;
 let physics, cameraController, inputManager, aiController;
-let ghostTrail, dustSystem, sparkSystem, ballEntity, specialMoveManager;
+let ghostTrail, dustSystem, sparkSystem, ballEntity, specialMoveManager, vfx;
 let engineReady = false;
+let lastCarrier = null;
+let hitStop = 0;
 
 let gameState = 'menu';
 let scoreHome = 0;
@@ -110,7 +113,11 @@ function initEngine() {
   ghostTrail = new GhostTrailEffect(scene);
   dustSystem = new DustParticleSystem(scene, 200, 0xddbb88);
   sparkSystem = new DustParticleSystem(scene, 80, 0xffe088);
+  vfx = new VfxManager(scene);
   ballEntity = new Ball(scene, physics.ballBody);
+  ballEntity.onImpact = (x, z, speed) => {
+    vfx.impactDisc(x, z, 0xfff1c4, THREE.MathUtils.clamp(speed / 18, 0.7, 1.4));
+  };
   specialMoveManager = new SpecialMoveManager(physics, ghostTrail);
 
   engineReady = true;
@@ -173,6 +180,9 @@ function startMatch(selectedLegend) {
   gameState = 'playing';
   physics.resetBall();
   ballEntity.setTrail(false);
+  ballEntity.setPossessionTeam(null);
+  lastCarrier = null;
+  hitStop = 0;
 
   uiManager.updateScore(0, 0);
   uiManager.updateGinga(0);
@@ -235,7 +245,7 @@ function resetPlayerPositions() {
   }
 }
 
-function assignPossession(ballPos) {
+function assignPossession() {
   let best = null;
   let bestDist = BALL_POSSESSION_DIST;
   for (const player of allPlayers) {
@@ -246,7 +256,19 @@ function assignPossession(ballPos) {
     }
   }
   if (best) best.hasBall = true;
+
+  const prevId = lastCarrier ? lastCarrier.legend?.id : null;
+  const nextId = best ? best.legend?.id : null;
+  if (prevId !== nextId) {
+    if (lastCarrier && best && lastCarrier.team !== best.team) {
+      uiManager.flashTurnover(best.team === TEAM_HOME);
+    }
+    lastCarrier = best;
+  }
+
+  ballEntity.setPossessionTeam(best ? best.team : null);
   uiManager.updatePossession(best);
+  return best;
 }
 
 function cameraRelativeMove(raw) {
@@ -304,10 +326,11 @@ function processInput(dt) {
     ginga = Math.min(MAX_GINGA, ginga + 5);
     const bx = physics.ballBody.position.x;
     const bz = physics.ballBody.position.z;
-    dustSystem.emitBurst(bx, 0, bz, 14);
-    sparkSystem.emitBurst(bx, 0.2, bz, 18);
-    ballEntity.setTrail(true, 0xffcc66, 0.45);
-    cameraController.punch(1.25);
+    dustSystem.emitBurst(bx, 0, bz, 10);
+    sparkSystem.emitBurst(bx, 0.2, bz, 14);
+    vfx.impactDisc(bx, bz, 0xffe08a, 1.1);
+    ballEntity.kickJuice(power);
+    cameraController.punch(power / SHOOT_POWER);
     uiManager.flashShoot();
     humanPlayer.hasBall = false;
   }
@@ -341,6 +364,14 @@ function processInput(dt) {
   if (inputManager.isSpecialPressed() && ginga >= GINGA_COST) {
     if (specialMoveManager.activate(humanPlayer, ballEntity, ginga)) {
       ginga = 0;
+      const color = humanPlayer.legend?.color ?? 0xffcc00;
+      const p = humanPlayer.body.position;
+      vfx.shockwave(p.x, p.z, color);
+      vfx.burst(p.x, 0.9, p.z, color);
+      sparkSystem.emitBurst(p.x, 0.4, p.z, 16);
+      cameraController.punch(1.05);
+      uiManager.flashDesat();
+      hitStop = 0.05;
     }
   }
 
@@ -384,6 +415,15 @@ function animate() {
 
   const dt = Math.min(clock.getDelta(), 0.05);
 
+  if (hitStop > 0) {
+    hitStop -= dt;
+    vfx.update(dt);
+    ghostTrail.update(dt);
+    composer.render();
+    return;
+  }
+
+  let carrier = lastCarrier;
   if (gameState === 'playing') {
     processInput(dt);
     physics.update(dt);
@@ -392,7 +432,7 @@ function animate() {
     for (const player of allPlayers) {
       player.update(dt, ballPos);
     }
-    assignPossession(ballPos);
+    carrier = assignPossession();
 
     const aiPlayers = allPlayers.filter((p) => !p.isHuman);
     aiController.update(
@@ -407,18 +447,31 @@ function animate() {
     updateGinga(dt);
     updateMatchTimer(dt);
 
-    cameraController.update(dt, ballPos, humanPlayer ? humanPlayer.getPosition() : null);
+    cameraController.update(
+      dt,
+      ballPos,
+      carrier ? carrier.getPosition() : null,
+      humanPlayer ? humanPlayer.getPosition() : null,
+      !!carrier
+    );
   } else if (gameState === 'goal') {
     physics.update(dt);
     const ballPos = ballEntity.getPosition();
-    cameraController.update(dt, ballPos, humanPlayer ? humanPlayer.getPosition() : null);
+    cameraController.update(
+      dt,
+      ballPos,
+      null,
+      humanPlayer ? humanPlayer.getPosition() : null,
+      false
+    );
     goalCooldown = Math.max(0, goalCooldown - dt);
   }
 
-  ballEntity.update();
+  ballEntity.update(dt);
   ghostTrail.update(dt);
   dustSystem.update(dt);
   sparkSystem.update(dt);
+  vfx.update(dt);
 
   composer.render();
 }

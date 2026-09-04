@@ -51,8 +51,8 @@ export class Player {
     }
 
     if (this.possessionRing) {
-      this.possessionRing.material.opacity = this.hasBall ? 0.85 : 0;
-      this.possessionRing.scale.setScalar(this.hasBall ? 1 + Math.sin(t * 6) * 0.08 : 1);
+      this.possessionRing.material.opacity = this.hasBall ? 0.28 + Math.sin(t * 5) * 0.06 : 0;
+      this.possessionRing.scale.setScalar(this.hasBall ? 1 + Math.sin(t * 4) * 0.08 : 1);
     }
 
     if (this.humanMarker) {

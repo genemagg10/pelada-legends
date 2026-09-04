@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BALL_RADIUS } from '../constants.js';
+import { BALL_RADIUS, TEAM_HOME, TEAM_HOME_COLOR, TEAM_AWAY_COLOR } from '../constants.js';
 import { setShadow } from '../utils/shadows.js';
 import { createSoccerTexture } from '../utils/textures.js';
 
@@ -14,75 +14,124 @@ export class Ball {
       roughness: 0.35,
       metalness: 0.05,
       emissive: 0x332810,
-      emissiveIntensity: 0.55,
+      emissiveIntensity: 0.4,
     });
     this.mesh = new THREE.Mesh(geo, mat);
     setShadow(this.mesh, true, false);
     scene.add(this.mesh);
 
-    const rim = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(BALL_RADIUS * 1.06, 1),
-      new THREE.MeshBasicMaterial({
-        color: 0xfff3c8,
-        transparent: true,
-        opacity: 0.16,
-        wireframe: true,
-      })
-    );
-    this.mesh.add(rim);
-
     this.trail = [];
-    this.trailGeo = new THREE.SphereGeometry(BALL_RADIUS * 0.5, 6, 6);
     this.trailMeshes = [];
-    for (let i = 0; i < 8; i++) {
-      const m = new THREE.Mesh(this.trailGeo, new THREE.MeshBasicMaterial({
-        color: 0xffcc00,
+    const trailGeo = new THREE.SphereGeometry(BALL_RADIUS * 0.42, 6, 6);
+    for (let i = 0; i < 5; i++) {
+      const m = new THREE.Mesh(trailGeo, new THREE.MeshBasicMaterial({
+        color: 0xffe08a,
         transparent: true,
-        opacity: 0.3,
+        opacity: 0,
       }));
       m.visible = false;
       scene.add(m);
       this.trailMeshes.push(m);
     }
+
     this.showTrail = false;
-    this.trailColor = 0xffcc00;
+    this.trailColor = 0xffe08a;
     this.autoTrailUntil = 0;
+    this.kickTimer = 0;
+    this.kickDuration = 0.16;
+    this.prevSpeed = 0;
+    this.prevVy = 0;
+    this.possessionTeam = null;
+    this.onImpact = null;
   }
 
-  setTrail(active, color = 0xffcc00, duration = 0) {
+  setTrail(active, color = 0xffe08a, duration = 0.28) {
     this.showTrail = active;
     this.trailColor = color;
-    this.autoTrailUntil = duration > 0 ? performance.now() + duration * 1000 : 0;
+    this.autoTrailUntil = active && duration > 0 ? performance.now() + duration * 1000 : 0;
   }
 
-  update() {
+  kickJuice(power = 20) {
+    this.kickTimer = this.kickDuration;
+    const n = THREE.MathUtils.clamp(power / 28, 0.4, 1.2);
+    this.setTrail(true, 0xffe8a0, 0.22 + n * 0.12);
+  }
+
+  setPossessionTeam(team) {
+    this.possessionTeam = team;
+    if (team === TEAM_HOME) {
+      this.mesh.material.emissive.setHex(TEAM_HOME_COLOR);
+      this.mesh.material.emissiveIntensity = 0.72;
+      this.trailColor = TEAM_HOME_COLOR;
+    } else if (team === TEAM_AWAY) {
+      this.mesh.material.emissive.setHex(TEAM_AWAY_COLOR);
+      this.mesh.material.emissiveIntensity = 0.68;
+      this.trailColor = TEAM_AWAY_COLOR;
+    } else {
+      this.mesh.material.emissive.setHex(0x332810);
+      this.mesh.material.emissiveIntensity = 0.38;
+      this.trailColor = 0xffe08a;
+    }
+  }
+
+  update(dt = 0.016) {
     this.mesh.position.copy(this.body.position);
     this.mesh.quaternion.copy(this.body.quaternion);
+
+    const vel = this.body.velocity;
+    const speed = vel.length();
+
+    if (speed > this.prevSpeed + 10) {
+      this.kickJuice(speed);
+    }
+
+    if (this.prevVy < -3.2 && vel.y > -0.8 && this.body.position.y < BALL_RADIUS + 0.45) {
+      if (this.onImpact) this.onImpact(this.body.position.x, this.body.position.z, speed);
+    }
+
+    if (this.kickTimer > 0) {
+      this.kickTimer = Math.max(0, this.kickTimer - dt);
+      const t = this.kickTimer / this.kickDuration;
+      if (t > 0.55) {
+        this.mesh.scale.set(1.28, 0.62, 1.28);
+      } else {
+        this.mesh.scale.set(0.78, 0.78, 1.36);
+      }
+    } else if (speed > 11) {
+      const k = THREE.MathUtils.clamp((speed - 11) / 22, 0, 0.28);
+      this.mesh.scale.set(1 - k * 0.28, 1 - k * 0.28, 1 + k);
+    } else {
+      this.mesh.scale.setScalar(1);
+    }
 
     if (this.autoTrailUntil && performance.now() > this.autoTrailUntil) {
       this.showTrail = false;
       this.autoTrailUntil = 0;
     }
 
-    const speed = this.body.velocity.length();
-    if (this.showTrail && speed > 8) {
+    const trailOn = this.showTrail || speed > 12;
+    if (trailOn) {
       this.trail.unshift(this.mesh.position.clone());
       if (this.trail.length > this.trailMeshes.length) this.trail.pop();
-    } else if (!this.showTrail) {
+    } else {
       this.trail = [];
     }
 
     for (let i = 0; i < this.trailMeshes.length; i++) {
       if (i < this.trail.length) {
         this.trailMeshes[i].position.copy(this.trail[i]);
-        this.trailMeshes[i].material.opacity = 0.35 * (1 - i / this.trailMeshes.length);
+        this.trailMeshes[i].material.opacity = 0.4 * (1 - i / this.trailMeshes.length);
         this.trailMeshes[i].material.color.setHex(this.trailColor);
         this.trailMeshes[i].visible = true;
-        this.trailMeshes[i].scale.setScalar(1 - i * 0.1);
+        const s = 0.85 - i * 0.12;
+        this.trailMeshes[i].scale.set(s * 0.7, s * 0.7, s * 1.35);
       } else {
         this.trailMeshes[i].visible = false;
       }
     }
+
+    this.prevSpeed = speed;
+    this.prevVy = vel.y;
   }
 
   getPosition() {

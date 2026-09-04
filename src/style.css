@@ -518,6 +518,34 @@ body {
   100% { opacity: 0; }
 }
 
+#fx-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 41;
+  pointer-events: none;
+  opacity: 0;
+}
+
+#fx-overlay.turnover-home {
+  background: radial-gradient(circle at 50% 55%, rgba(255, 204, 0, 0.32), transparent 58%);
+  animation: fx-pop 0.16s ease-out;
+}
+
+#fx-overlay.turnover-away {
+  background: radial-gradient(circle at 50% 55%, rgba(212, 31, 50, 0.32), transparent 58%);
+  animation: fx-pop 0.16s ease-out;
+}
+
+#fx-overlay.desat {
+  backdrop-filter: grayscale(0.7) contrast(1.08);
+  animation: fx-pop 0.09s linear;
+}
+
+@keyframes fx-pop {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @media (max-width: 720px) {
   .legend-card {
     flex: 0 1 132px;

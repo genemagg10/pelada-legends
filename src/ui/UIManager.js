@@ -19,6 +19,7 @@ export class UIManager {
     this.possessionChip = document.getElementById('possession-chip');
     this.possessionText = document.getElementById('possession-text');
     this.shootFlash = document.getElementById('shoot-flash');
+    this.fxOverlay = document.getElementById('fx-overlay');
 
     this.selectedLegend = null;
     this.onStartGame = null;
@@ -112,9 +113,26 @@ export class UIManager {
   }
 
   flashShoot() {
-    this.shootFlash.classList.remove('flash');
-    void this.shootFlash.offsetWidth;
-    this.shootFlash.classList.add('flash');
+    this._bumpClass(this.shootFlash, 'flash');
+  }
+
+  flashTurnover(isHome) {
+    if (!this.fxOverlay) return;
+    this.fxOverlay.classList.remove('turnover-home', 'turnover-away', 'desat');
+    void this.fxOverlay.offsetWidth;
+    this.fxOverlay.classList.add(isHome ? 'turnover-home' : 'turnover-away');
+  }
+
+  flashDesat() {
+    if (!this.fxOverlay) return;
+    this._bumpClass(this.fxOverlay, 'desat');
+  }
+
+  _bumpClass(el, className) {
+    if (!el) return;
+    el.classList.remove(className);
+    void el.offsetWidth;
+    el.classList.add(className);
   }
 
   showGoal() {

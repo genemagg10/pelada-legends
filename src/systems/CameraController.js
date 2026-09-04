@@ -1,63 +1,111 @@
 import * as THREE from 'three';
 import { COURT_WIDTH, COURT_LENGTH } from '../constants.js';
 
+const MIN_PITCH = THREE.MathUtils.degToRad(18);
+const MAX_PITCH = THREE.MathUtils.degToRad(40);
+
 /**
- * Side-follow camera that tracks the ball and the human player.
- * Punch is a short kick-zoom + shake used for shoot feedback.
+ * Spring-follow side camera.
+ * Loose ball → ball bias. Possession → carrier bias.
+ * FOV punch is 80–120ms and scales with shot power. Shake is damped.
  */
 export class CameraController {
   constructor(camera) {
     this.camera = camera;
-    this.target = new THREE.Vector3(0, 0, 0);
-    this.offset = new THREE.Vector3(26, 16, 0);
-    this.smoothness = 3;
+    this.offset = new THREE.Vector3(28, 17, 0);
+    this.posVel = new THREE.Vector3();
+    this.look = new THREE.Vector3();
+    this.lookVel = new THREE.Vector3();
+    this.stiffness = 22;
+    this.damping = 7.5;
+    this.lookStiffness = 18;
+    this.baseFov = 55;
+    this.fovKick = 0;
+    this.fovTime = 0;
+    this.fovAge = 0;
     this.shake = 0;
-    this.punchZoom = 0;
 
+    camera.fov = this.baseFov;
     camera.position.copy(this.offset);
     camera.lookAt(0, 0, 0);
+    camera.updateProjectionMatrix();
   }
 
-  punch(strength = 1.15) {
-    this.shake = strength;
-    this.punchZoom = 6;
+  punch(powerNorm = 0.7) {
+    const n = THREE.MathUtils.clamp(powerNorm, 0.3, 1.2);
+    this.fovKick = 2.2 + n * 3.2;
+    this.fovTime = 0.08 + n * 0.04;
+    this.fovAge = 0;
+    this.shake = 0.18 * n;
   }
 
-  update(dt, ballPos, playerPos) {
-    const focusPoint = new THREE.Vector3();
-    if (ballPos && playerPos) {
-      focusPoint.lerpVectors(ballPos, playerPos, 0.3);
+  update(dt, ballPos, carrierPos, humanPos, held) {
+    const focus = new THREE.Vector3();
+    if (held && carrierPos && ballPos) {
+      focus.lerpVectors(ballPos, carrierPos, 0.58);
+    } else if (ballPos && humanPos) {
+      focus.lerpVectors(humanPos, ballPos, 0.82);
     } else if (ballPos) {
-      focusPoint.copy(ballPos);
+      focus.copy(ballPos);
     }
 
-    focusPoint.x = THREE.MathUtils.clamp(focusPoint.x, -COURT_WIDTH / 3, COURT_WIDTH / 3);
-    focusPoint.z = THREE.MathUtils.clamp(focusPoint.z, -COURT_LENGTH / 3, COURT_LENGTH / 3);
+    focus.x = THREE.MathUtils.clamp(focus.x, -COURT_WIDTH / 3, COURT_WIDTH / 3);
+    focus.z = THREE.MathUtils.clamp(focus.z, -COURT_LENGTH / 3, COURT_LENGTH / 3);
+    focus.y = 0.35;
 
-    this.target.lerp(focusPoint, dt * this.smoothness);
-    this.punchZoom = THREE.MathUtils.damp(this.punchZoom, 0, 8, dt);
-
-    const desiredPos = new THREE.Vector3(
-      this.offset.x - this.punchZoom,
-      this.offset.y - this.punchZoom * 0.25,
-      this.target.z * 0.5
+    const desired = new THREE.Vector3(
+      this.offset.x,
+      this.offset.y,
+      focus.z * 0.48
     );
 
-    this.camera.position.lerp(desiredPos, dt * this.smoothness);
+    this._spring(this.camera.position, this.posVel, desired, this.stiffness, this.damping, dt);
+    this._spring(this.look, this.lookVel, focus, this.lookStiffness, this.damping, dt);
+    this._clampPitch(this.look);
 
-    if (this.shake > 0.02) {
-      this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.45;
-      this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.25;
-      this.shake = THREE.MathUtils.damp(this.shake, 0, 12, dt);
+    if (this.fovTime > 0 && this.fovAge < this.fovTime) {
+      this.fovAge += dt;
+      const u = THREE.MathUtils.clamp(this.fovAge / this.fovTime, 0, 1);
+      this.camera.fov = this.baseFov + this.fovKick * Math.sin(u * Math.PI);
+    } else {
+      this.camera.fov = THREE.MathUtils.damp(this.camera.fov, this.baseFov, 14, dt);
+      this.fovTime = 0;
+    }
+    this.camera.updateProjectionMatrix();
+
+    if (this.shake > 0.008) {
+      this.camera.position.x += (Math.random() - 0.5) * this.shake * 0.16;
+      this.camera.position.y += (Math.random() - 0.5) * this.shake * 0.1;
+      this.shake *= Math.exp(-16 * dt);
     } else {
       this.shake = 0;
     }
 
-    this.camera.lookAt(this.target.x, 0.4, this.target.z);
+    this.camera.lookAt(this.look.x, this.look.y, this.look.z);
+  }
+
+  _spring(current, vel, target, stiffness, damping, dt) {
+    vel.x += (target.x - current.x) * stiffness * dt;
+    vel.y += (target.y - current.y) * stiffness * dt;
+    vel.z += (target.z - current.z) * stiffness * dt;
+    const decay = Math.exp(-damping * dt);
+    vel.multiplyScalar(decay);
+    current.addScaledVector(vel, dt);
+  }
+
+  _clampPitch(look) {
+    const cam = this.camera.position;
+    const dx = look.x - cam.x;
+    const dz = look.z - cam.z;
+    const horiz = Math.sqrt(dx * dx + dz * dz) || 0.001;
+    const pitch = Math.atan2(cam.y - look.y, horiz);
+    const clamped = THREE.MathUtils.clamp(pitch, MIN_PITCH, MAX_PITCH);
+    if (clamped !== pitch) {
+      cam.y = look.y + horiz * Math.tan(clamped);
+    }
   }
 
   setMatchView() {
-    this.offset.set(26, 16, 0);
-    this.smoothness = 3;
+    this.offset.set(28, 17, 0);
   }
 }
