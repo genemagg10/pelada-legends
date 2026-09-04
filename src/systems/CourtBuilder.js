@@ -168,7 +168,7 @@ export class CourtBuilder {
     const goldEdge = new THREE.MeshStandardMaterial({
       color: COLOR_GOLD,
       emissive: COLOR_GOLD,
-      emissiveIntensity: 0.22,
+      emissiveIntensity: 0.34,
       roughness: 0.4,
     });
 
@@ -218,7 +218,7 @@ export class CourtBuilder {
         roughness: 0.7,
         metalness: 0,
         emissive: new THREE.Color(accentHex),
-        emissiveIntensity: 0.28,
+        emissiveIntensity: 0.38,
         side: THREE.DoubleSide,
       })
     );
@@ -379,7 +379,7 @@ export class CourtBuilder {
           new THREE.MeshStandardMaterial({
             color: lit ? COLOR_WINDOW_A : 0x221100,
             emissive: lit ? (this._rand() > 0.5 ? COLOR_WINDOW_A : COLOR_WINDOW_B) : 0x000000,
-            emissiveIntensity: lit ? 0.7 : 0,
+            emissiveIntensity: lit ? 0.95 : 0,
             roughness: 0.35,
           })
         );
@@ -438,7 +438,7 @@ export class CourtBuilder {
     const housingMat = new THREE.MeshStandardMaterial({
       color: COLOR_AMBER,
       emissive: COLOR_AMBER,
-      emissiveIntensity: 0.9,
+      emissiveIntensity: 1.15,
     });
 
     for (const [x, z] of lampPositions) {
@@ -451,7 +451,7 @@ export class CourtBuilder {
       housing.position.set(x, 5.5, z);
       this.scene.add(housing);
 
-      const light = new THREE.PointLight(COLOR_AMBER, 1.05, 22, 1.8);
+      const light = new THREE.PointLight(COLOR_AMBER, 1.35, 28, 1.45);
       light.position.set(x, 5.35, z);
       this.scene.add(light);
     }
