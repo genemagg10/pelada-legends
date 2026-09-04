@@ -24,7 +24,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     roughness: 0.55,
     metalness: 0.04,
     emissive: kit,
-    emissiveIntensity: isHome ? 0.2 : 0.14,
+    emissiveIntensity: isHome ? 0.18 : 0.16,
   });
   const shortsMat = new THREE.MeshStandardMaterial({
     color: isHome ? 0x3d1f00 : 0x1a080c,
@@ -54,13 +54,13 @@ export function createPlayerMesh({ team, legend, isHuman }) {
     setShadow(foot, true, true);
     group.add(foot);
 
-    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.5, 0.14), kitMat);
-    arm.position.set(side * 0.38, 1.12, 0);
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.5, 0.15), kitMat);
+    arm.position.set(side * 0.42, 1.12, 0);
     setShadow(arm, true, false);
     group.add(arm);
 
     const hand = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.13, 0.13), skinMat);
-    hand.position.set(side * 0.38, 0.84, 0.02);
+    hand.position.set(side * 0.42, 0.84, 0.02);
     group.add(hand);
   }
 
@@ -74,7 +74,7 @@ export function createPlayerMesh({ team, legend, isHuman }) {
   setShadow(waist, true, true);
   group.add(waist);
 
-  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.4, 0.36), kitMat);
+  const chest = new THREE.Mesh(new THREE.BoxGeometry(0.68, 0.4, 0.36), kitMat);
   chest.position.y = 1.2;
   setShadow(chest, true, true);
   group.add(chest);
@@ -103,9 +103,12 @@ export function createPlayerMesh({ team, legend, isHuman }) {
   hair.position.set(0, 1.78, 0);
   group.add(hair);
 
-  const visor = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.07, 0.08), hairMat);
-  visor.position.set(0, 1.74, 0.22);
-  group.add(visor);
+  const face = new THREE.Mesh(
+    new THREE.BoxGeometry(0.34, 0.16, 0.1),
+    new THREE.MeshStandardMaterial({ color: 0x1a1008, roughness: 0.7 })
+  );
+  face.position.set(0, 1.72, 0.24);
+  group.add(face);
 
   const glowRing = new THREE.Mesh(
     new THREE.RingGeometry(0.68, 0.9, 28),

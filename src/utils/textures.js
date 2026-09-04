@@ -12,37 +12,47 @@ function hashColor(n) {
   return x - Math.floor(x);
 }
 
-export function createConcreteTexture(size = 512) {
-  const { canvas, ctx } = makeCanvas(size);
-  ctx.fillStyle = '#b8a888';
-  ctx.fillRect(0, 0, size, size);
+let noiseSource = null;
 
-  for (let i = 0; i < 1400; i++) {
-    const x = hashColor(i + 2) * size;
-    const y = hashColor(i + 9) * size;
-    const r = 4 + hashColor(i + 17) * 28;
-    const shade = 90 + hashColor(i + 31) * 55;
-    ctx.fillStyle = `rgba(${shade + 20},${shade},${shade - 12},${0.04 + hashColor(i) * 0.08})`;
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fill();
+/** One shared albedo noise. Tint with material.color — no extra PBR maps. */
+export function createNoiseMap(repeatX = 4, repeatY = 4, size = 256) {
+  if (!noiseSource) {
+    const { canvas, ctx } = makeCanvas(size);
+    ctx.fillStyle = '#9a8a72';
+    ctx.fillRect(0, 0, size, size);
+    for (let i = 0; i < 900; i++) {
+      const x = hashColor(i + 2) * size;
+      const y = hashColor(i + 9) * size;
+      const r = 3 + hashColor(i + 17) * 18;
+      const shade = 110 + hashColor(i + 31) * 70;
+      ctx.fillStyle = `rgba(${shade + 16},${shade},${shade - 14},${0.05 + hashColor(i) * 0.1})`;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = 'rgba(40, 28, 18, 0.16)';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 12; i++) {
+      ctx.beginPath();
+      ctx.moveTo(hashColor(i + 40) * size, hashColor(i + 70) * size);
+      ctx.lineTo(hashColor(i + 90) * size, hashColor(i + 110) * size);
+      ctx.stroke();
+    }
+    noiseSource = new THREE.CanvasTexture(canvas);
+    noiseSource.wrapS = THREE.RepeatWrapping;
+    noiseSource.wrapT = THREE.RepeatWrapping;
+    noiseSource.colorSpace = THREE.SRGBColorSpace;
   }
-
-  ctx.strokeStyle = 'rgba(40, 28, 18, 0.18)';
-  ctx.lineWidth = 1.2;
-  for (let i = 0; i < 18; i++) {
-    ctx.beginPath();
-    ctx.moveTo(hashColor(i + 40) * size, hashColor(i + 70) * size);
-    ctx.lineTo(hashColor(i + 90) * size, hashColor(i + 110) * size);
-    ctx.stroke();
-  }
-
-  const texture = new THREE.CanvasTexture(canvas);
+  const texture = noiseSource.clone();
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(4, 6);
+  texture.repeat.set(repeatX, repeatY);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
+}
+
+export function createConcreteTexture() {
+  return createNoiseMap(4, 6);
 }
 
 export function createBrickTexture(size = 256) {
